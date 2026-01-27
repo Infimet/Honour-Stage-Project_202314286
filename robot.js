@@ -1,4 +1,4 @@
-// robot state & canvas management
+// robot state & canvas management (phase 2)
 
 class Robot {
     constructor(canvas) {
