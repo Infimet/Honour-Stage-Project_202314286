@@ -4,16 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NAG-25-953</title>
+    <script src="https://unpkg.com/blockly/blockly.min.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
   
 <body>
     <div class="container">
-        <div class="column left-column">
-            <h2>Block Programming</h2>
-            <div id="blocklyDiv"></div>
-            <button id="runButton" class="run-button">Run</button>
-        </div>
+        <div class="editor-panel">
+    <h2>Block Programming</h2>
+    <div id="blocklyDiv" style="height: 480px; width: 100%;"></div>
+
+    <xml id="toolbox" style="display: none">
+        <category name="Movement" colour="210">
+            <block type="move_forward"></block>
+            <block type="turn_right"></block>
+            <block type="turn_left"></block>
+        </category>
+        <category name="Logic" colour="120">
+            <block type="controls_repeat_ext">
+                <value name="TIMES">
+                    <shadow type="math_number">
+                        <field name="NUM">5</field>
+                    </shadow>
+                </value>
+            </block>
+        </category>
+    </xml>
+
+    <div class="controls">
+        <button id="runButton" class="btn btn-primary">Run Code</button>
+        <button id="resetButton" class="btn btn-secondary">Reset</button>
+    </div>
+</div>
         <div class="column right-column">
             <h2>Robot Canvas</h2>
             <canvas id="robotCanvas" width="600" height="600"></canvas>
