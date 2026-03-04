@@ -36,15 +36,15 @@ Blockly.Blocks['turn_left'] = {
 
 // 2. define javascript generation for blocks
 javascript.javascriptGenerator.forBlock['move_forward'] = function(block) {
-  return 'robotInstance.move();\n';
+  return 'window.robotInstance.moveForward();\n'; 
 };
 
 javascript.javascriptGenerator.forBlock['turn_right'] = function(block) {
-  return 'robotInstance.turnRight();\n';
+  return 'window.robotInstance.turnRight();\n'; 
 };
 
 javascript.javascriptGenerator.forBlock['turn_left'] = function(block) {
-  return 'robotInstance.turnLeft();\n';
+  return 'window.robotInstance.turnLeft();\n'; 
 };
 
 // 3. initialise application
