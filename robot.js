@@ -1,4 +1,4 @@
-// robot state & canvas management (phase 2)
+// robot state & canvas management (sprint 3)
 
 class Robot {
     constructor(canvas) {
@@ -7,37 +7,56 @@ class Robot {
         this.reset();
     }
 
-    reset() {
-        // starting position (centre of canvas)
-        this.x = this.canvas.width / 2;
-        this.y = this.canvas.height / 2;
-        // starting angle (0 = facing right, 90 = facing down, 180 = facing left, 270 = facing up)
-        this.angle = 270; // start by  facing upwards
-        this.stepSize = 40;
-        this.trail = []; // store trail positions for visualisation
-        this.trail.push({x: this.x, y: this.y});
-        this.draw();
+loadLevel(levelNumber) {
+    this.currentLevel = levelNumber;
+    this.reset();
+}
+
+  reset() {
+    this.x = this.canvas.width / 2;
+    this.y = this.canvas.height / 2;
+    this.angle = 270; 
+    this.stepSize = 40;
+    this.trail = [{x: this.x, y: this.y}];
+
+    // LEVEL MANAGER: change target based on level
+    if (this.currentLevel === 2) {
+        // level 2: 3 steps Left, 2 steps Down
+        this.target = { x: this.x - 120, y: this.y + 80 };
+    } else {
+        // level 1 (Default): 2 steps Right, 3 steps Up
+        this.target = { x: this.x + 80, y: this.y - 120 };
     }
+
+    this.draw();
+}
 
     draw() {
         // clears canvas
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         
-        // draws grid
+        // draw order matters: back to front
         this.drawGrid();
-        
-        // draws the trail
+        this.drawTarget(); // draws the goal
         this.drawTrail();
-        
-        //robot
         this.drawRobot();
+    }
+
+    drawTarget() {
+        this.ctx.fillStyle = '#4CAF50'; // green goal
+        this.ctx.strokeStyle = '#388E3C';
+        this.ctx.lineWidth = 2;
+        
+        this.ctx.beginPath();
+        this.ctx.arc(this.target.x, this.target.y, 15, 0, 2 * Math.PI);
+        this.ctx.fill();
+        this.ctx.stroke();
     }
 
     drawGrid() {
         this.ctx.strokeStyle = '#e0e0e0';
         this.ctx.lineWidth = 1;
         
-        // for vert lines
         for (let x = 0; x <= this.canvas.width; x += 40) {
             this.ctx.beginPath();
             this.ctx.moveTo(x, 0);
@@ -45,7 +64,6 @@ class Robot {
             this.ctx.stroke();
         }
         
-        // horizontal lines
         for (let y = 0; y <= this.canvas.height; y += 40) {
             this.ctx.beginPath();
             this.ctx.moveTo(0, y);
@@ -77,7 +95,6 @@ class Robot {
         this.ctx.translate(this.x, this.y);
         this.ctx.rotate((this.angle * Math.PI) / 180);
         
-        // draws the robot's body (as a triangle)
         this.ctx.fillStyle = '#FF5722';
         this.ctx.strokeStyle = '#D84315';
         this.ctx.lineWidth = 2;
@@ -90,7 +107,6 @@ class Robot {
         this.ctx.fill();
         this.ctx.stroke();
         
-        // draw robot 'eyes' / (essentially a front indicator indicating orientation)
         this.ctx.fillStyle = 'white';
         this.ctx.beginPath();
         this.ctx.arc(8, 0, 3, 0, 2 * Math.PI);
@@ -104,7 +120,6 @@ class Robot {
         const newX = this.x + this.stepSize * Math.cos(radians);
         const newY = this.y + this.stepSize * Math.sin(radians);
         
-        // checks boundaries
         if (newX >= 20 && newX <= this.canvas.width - 20 && 
             newY >= 20 && newY <= this.canvas.height - 20) {
             this.x = newX;
@@ -119,7 +134,6 @@ class Robot {
         const newX = this.x - this.stepSize * Math.cos(radians);
         const newY = this.y - this.stepSize * Math.sin(radians);
         
-        // check boundaries
         if (newX >= 20 && newX <= this.canvas.width - 20 && 
             newY >= 20 && newY <= this.canvas.height - 20) {
             this.x = newX;
@@ -131,45 +145,34 @@ class Robot {
 
     turnLeft() {
         this.angle -= 90;
-        if (this.angle < 0) {
-            this.angle += 360;
-        }
+        if (this.angle < 0) this.angle += 360;
         this.draw();
     }
 
     turnRight() {
         this.angle += 90;
-        if (this.angle >= 360) {
-            this.angle -= 360;
-        }
+        if (this.angle >= 360) this.angle -= 360;
         this.draw();
     }
+
+    // 27/03/26: check if the robot is on the target
+    checkWin() {
+        // calculate the exact distance between robot and target
+        const distance = Math.sqrt(Math.pow(this.x - this.target.x, 2) + Math.pow(this.y - this.target.y, 2));
+        
+        console.log(`Robot is at X:${this.x.toFixed(1)}, Y:${this.y.toFixed(1)}`);
+        console.log(`Target is at X:${this.target.x}, Y:${this.target.y}`);
+        console.log(`Distance to target: ${distance.toFixed(2)}px`);
+        
+        // ff the robot is within 10 pixels of the center of the target, it's a win (a win is a win)
+        return distance < 10; 
+    }
 }
-
-
-let robotInstance = null;
 
 // global functions for blockly to call
-function moveForward() {
-    if (robotInstance) {
-        robotInstance.moveForward();
-    }
-}
+let robotInstance = null;
 
-function moveBackward() {
-    if (robotInstance) {
-        robotInstance.moveBackward();
-    }
-}
-
-function turnLeft() {
-    if (robotInstance) {
-        robotInstance.turnLeft();
-    }
-}
-
-function turnRight() {
-    if (robotInstance) {
-        robotInstance.turnRight();
-    }
-}
+function moveForward() { if (robotInstance) robotInstance.moveForward(); }
+function moveBackward() { if (robotInstance) robotInstance.moveBackward(); }
+function turnLeft() { if (robotInstance) robotInstance.turnLeft(); }
+function turnRight() { if (robotInstance) robotInstance.turnRight(); }

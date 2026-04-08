@@ -1,6 +1,6 @@
 // main application logic - foundation phase (phase 2)
 
-// 1. define custom blicks
+// 1. define custom blocks
 Blockly.Blocks['move_forward'] = {
   init: function() {
     this.appendDummyInput()
@@ -51,7 +51,7 @@ javascript.javascriptGenerator.forBlock['turn_left'] = function(block) {
 var workspace = null;
 
 document.addEventListener('DOMContentLoaded', function() {
-    // initislise the robit
+    // initislise the robot
     const canvas = document.getElementById('robotCanvas');
     window.robotInstance = new Robot(canvas); // make global for blockly access
 
@@ -64,22 +64,46 @@ document.addEventListener('DOMContentLoaded', function() {
     // button event listeners
     document.getElementById('runButton').addEventListener('click', runCode);
     document.getElementById('resetButton').addEventListener('click', resetApp);
+    document.getElementById('nextLevelBtn').addEventListener('click', nextLevel);
 });
 
 // 4. execution logic
 function runCode() {
-    // generate js code from blocks
     var code = javascript.javascriptGenerator.workspaceToCode(workspace);
     
-    // wrap in async function to allow animation delays if needed later
     try {
-        console.log("Executing Code:\n" + code);
-        eval(code); // execute generated code
+        eval(code); 
+        
+        // win state
+        if (window.robotInstance.checkWin()) {
+            setTimeout(() => {
+                // remove the 'hidden' class to show the modal
+                document.getElementById('winModal').classList.remove('hidden');
+            }, 100);
+        }
     } catch (e) {
-        console.error(e);
+        console.error("Execution Error:", e);
         alert('Error executing code: ' + e);
     }
 }
+
+function resetApp() {
+    window.robotInstance.reset();
+}
+
+// next level logic
+let currentLevel = 1;
+
+function nextLevel() {
+    currentLevel++;
+    
+    document.getElementById('winModal').classList.add('hidden');
+    
+    workspace.clear();
+    
+    window.robotInstance.loadLevel(currentLevel);
+}
+
 
 function resetApp() {
     window.robotInstance.reset();
