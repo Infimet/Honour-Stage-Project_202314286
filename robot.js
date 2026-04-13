@@ -4,11 +4,18 @@ class Robot {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
+        this.activeLevel = null;
         this.reset();
     }
 
 loadLevel(levelNumber) {
     this.currentLevel = levelNumber;
+    this.reset();
+}
+
+loadLevelFromDb(levelData) {
+    this.activeLevel  = levelData;
+    this.currentLevel = levelData.id;
     this.reset();
 }
 
@@ -20,11 +27,11 @@ loadLevel(levelNumber) {
     this.trail = [{x: this.x, y: this.y}];
 
     // LEVEL MANAGER: change target based on level
-    if (this.currentLevel === 2) {
-        // level 2: 3 steps Left, 2 steps Down
+    if (this.activeLevel) {
+        this.target = { x: this.activeLevel.target_x, y: this.activeLevel.target_y };
+    } else if (this.currentLevel === 2) {
         this.target = { x: this.x - 120, y: this.y + 80 };
     } else {
-        // level 1 (Default): 2 steps Right, 3 steps Up
         this.target = { x: this.x + 80, y: this.y - 120 };
     }
 

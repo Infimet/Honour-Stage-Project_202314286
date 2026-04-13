@@ -5,17 +5,100 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NAG-25-953</title>
     <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="styles.css">
 </head>
   
+
+
 <body>
-    <div class="container">
-        
+     <div id="levelSelectScreen" class="ls-screen">
+ 
+        <!-- animated dot-grid background -->
+        <div class="ls-bg-grid" aria-hidden="true"></div>
+ 
+        <div class="ls-container">
+ 
+            <!-- header -->
+            <header class="ls-header">
+                <div class="ls-logo">
+                    <span class="ls-logo-icon">🤖</span>
+                    <span class="ls-logo-text">RoboCode</span>
+                </div>
+                <p class="ls-tagline">Choose a mission. Program your robot. Earn your stars.</p>
+            </header>
+ 
+            <!-- category tabs -->
+            <nav class="ls-tabs" id="lsTabs" role="tablist" aria-label="Level categories">
+                <button class="ls-tab ls-tab--active"
+                        role="tab" aria-selected="true"
+                        data-category="basics">
+                    <span class="ls-tab-icon">🚀</span> Movement Basics
+                </button>
+                <button class="ls-tab ls-tab--locked"
+                        role="tab" aria-selected="false"
+                        data-category="loops" disabled
+                        title="Complete Movement Basics to unlock">
+                    <span class="ls-tab-icon">🔁</span> Loops
+                    <span class="ls-tab-lock">🔒</span>
+                </button>
+                <button class="ls-tab ls-tab--locked"
+                        role="tab" aria-selected="false"
+                        data-category="obstacles" disabled
+                        title="Complete Loops to unlock">
+                    <span class="ls-tab-icon">🧱</span> Obstacles
+                    <span class="ls-tab-lock">🔒</span>
+                </button>
+                <button class="ls-tab ls-tab--locked"
+                        role="tab" aria-selected="false"
+                        data-category="conditionals" disabled
+                        title="Complete Obstacles to unlock">
+                    <span class="ls-tab-icon">🔀</span> Conditionals
+                    <span class="ls-tab-lock">🔒</span>
+                </button>
+            </nav>
+ 
+            <!-- level card grid — populated by renderLevelSelect() -->
+            <main class="ls-grid" id="levelGrid" role="list" aria-label="Available levels">
+                <!-- skeleton cards shown while supabase fetches -->
+                <div class="ls-skeleton" aria-hidden="true"></div>
+                <div class="ls-skeleton" aria-hidden="true" style="animation-delay:.1s"></div>
+                <div class="ls-skeleton" aria-hidden="true" style="animation-delay:.2s"></div>
+                <div class="ls-skeleton" aria-hidden="true" style="animation-delay:.3s"></div>
+            </main>
+ 
+            <!-- student stats footer -->
+            <footer class="ls-footer">
+                <div class="ls-footer-stat">
+                    <span class="ls-footer-icon">⭐</span>
+                    <span class="ls-footer-value" id="lsTotalStars">—</span>
+                    <span class="ls-footer-label">Total Stars</span>
+                </div>
+                <div class="ls-footer-stat">
+                    <span class="ls-footer-icon">✅</span>
+                    <span class="ls-footer-value" id="lsCompletedCount">—</span>
+                    <span class="ls-footer-label">Levels Done</span>
+                </div>
+            </footer>
+ 
+        </div>
+    </div>
+ 
+ 
+    <!-- main game UI — hidden until the player picks a level -->
+    <div class="container hidden" id="gameContainer">
+ 
         <div class="column left-column">
             <h2>Block Programming</h2>
-            
+ 
             <div id="blocklyDiv"></div>
-        
+ 
             <xml id="toolbox" style="display: none">
                 <category name="Movement" colour="210">
                     <block type="move_forward"></block>
@@ -32,28 +115,37 @@
                     </block>
                 </category>
             </xml>
-        
+ 
             <button id="runButton" class="run-button">Run Code</button>
             <button id="resetButton" class="reset-button">Reset</button>
+            <!-- back button lets the student return to level select -->
+            <button id="backButton" class="back-button">← Level Select</button>
         </div>
-
+ 
         <div class="column right-column">
             <h2>Robot Canvas</h2>
             <canvas id="robotCanvas" width="600" height="600"></canvas>
         </div>
-        
+ 
     </div>
-
-<div id="winModal" class="modal hidden">
+ 
+    <!-- win modal -->
+    <div id="winModal" class="modal hidden">
         <div class="modal-content">
             <h2>Level Complete!</h2>
             <p>Great job! You successfully programmed the robot to reach the target.</p>
+            <!-- star rating display — filled in by runCode() -->
+            <div id="winStars" class="win-stars"></div>
             <button id="nextLevelBtn" class="run-button">Next Level</button>
+            <button id="backToMenuBtn" class="reset-button" style="margin-top:8px">Back to Menu</button>
         </div>
     </div>
-
+ 
+    <!-- scripts — remember riyadh-- order matters!! -->
+    <script src="supabase.js"></script>
     <script src="robot.js"></script>
     <script src="app.js"></script>
+    <script src="level_select.js"></script>
     
 </body>
 </html>
