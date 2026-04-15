@@ -4,3 +4,26 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 // the cdn script (loaded in index.html) exposes a global `supabase` object
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// fetches all levels for a given category, sorted by difficulty
+async function fetchLevelsByCategory(category = 'basics') {
+    const { data, error } = await db
+        .from('levels')
+        .select('*')
+        .eq('category', category)
+        .order('difficulty', { ascending: true });
+
+    if (error) {
+        console.error('could not fetch levels:', error.message);
+        return [];
+    }
+
+    return data;
+}
+
+// calculates star rating based on block efficiency
+function calculateStars(blocksUsed, optimalBlockCount) {
+    if (blocksUsed <= optimalBlockCount)        return 3;
+    if (blocksUsed <= optimalBlockCount * 1.5)  return 2;
+    return 1;
+}

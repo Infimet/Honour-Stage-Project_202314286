@@ -51,20 +51,19 @@ javascript.javascriptGenerator.forBlock['turn_left'] = function(block) {
 var workspace = null;
 
 document.addEventListener('DOMContentLoaded', function() {
-    // initislise the robot
     const canvas = document.getElementById('robotCanvas');
-    window.robotInstance = new Robot(canvas); // make global for blockly access
+    window.robotInstance = new Robot(canvas);
 
-    // initialise Blockly workspace
     workspace = Blockly.inject('blocklyDiv', {
         toolbox: document.getElementById('toolbox'),
         scrollbars: false
     });
 
-    // button event listeners
     document.getElementById('runButton').addEventListener('click', runCode);
     document.getElementById('resetButton').addEventListener('click', resetApp);
     document.getElementById('nextLevelBtn').addEventListener('click', nextLevel);
+    document.getElementById('backToMenuBtn').addEventListener('click', returnToLevelSelect);
+    document.getElementById('backButton').addEventListener('click', returnToLevelSelect);
 });
 
 // 4. execution logic
@@ -81,7 +80,9 @@ function runCode() {
                 const optimal    = window.activeLevel?.optimal_block_count ?? blocksUsed;
                 const stars      = calculateStars(blocksUsed, optimal);
 
-                if (window.activeLevel) await saveProgress(window.activeLevel.id, stars);
+                if (window.activeLevel && typeof saveProgress === 'function') {
+                    await saveProgress(window.activeLevel.id, stars);
+              }
 
                 document.getElementById('winModal').classList.remove('hidden');
             }, 100);
