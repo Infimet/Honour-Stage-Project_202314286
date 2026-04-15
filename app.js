@@ -76,8 +76,13 @@ function runCode() {
         
         // win state
         if (window.robotInstance.checkWin()) {
-            setTimeout(() => {
-                // remove the 'hidden' class to show the modal
+            setTimeout(async () => {
+                const blocksUsed = workspace.getAllBlocks(false).length;
+                const optimal    = window.activeLevel?.optimal_block_count ?? blocksUsed;
+                const stars      = calculateStars(blocksUsed, optimal);
+
+                if (window.activeLevel) await saveProgress(window.activeLevel.id, stars);
+
                 document.getElementById('winModal').classList.remove('hidden');
             }, 100);
         }
@@ -93,6 +98,7 @@ function resetApp() {
 
 // next level logic
 let currentLevel = 1;
+let activeLevel = null;
 
 function nextLevel() {
     currentLevel++;
@@ -107,4 +113,13 @@ function nextLevel() {
 
 function resetApp() {
     window.robotInstance.reset();
+}
+
+function returnToLevelSelect() {
+    document.getElementById('winModal').classList.add('hidden');
+    document.getElementById('gameContainer').classList.add('hidden');
+    document.getElementById('levelSelectScreen').classList.remove('hidden');
+
+    const activeTab = document.querySelector('#lsTabs .ls-tab--active');
+    if (activeTab) renderLevelSelect(activeTab.dataset.category);
 }
