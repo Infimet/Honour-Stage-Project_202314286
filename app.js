@@ -109,13 +109,20 @@ let currentLevel = 1;
 let activeLevel = null;
 
 function nextLevel() {
-    currentLevel++;
-    
     document.getElementById('winModal').classList.add('hidden');
-    
     workspace.clear();
-    
-    window.robotInstance.loadLevel(currentLevel);
+
+    // find the next level in the current category's fetched list
+    const currentIndex = currentCategoryLevels.findIndex(l => l.id === window.activeLevel?.id);
+    const next = currentCategoryLevels[currentIndex + 1];
+
+    if (next) {
+        window.robotInstance.loadLevelFromDb(next);
+        window.activeLevel = next;
+    } else {
+        // no more levels in this category, go back to menu
+        returnToLevelSelect();
+    }
 }
 
 

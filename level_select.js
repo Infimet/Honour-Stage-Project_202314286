@@ -35,7 +35,9 @@ async function renderLevelSelect(category = 'basics') {
     grid.innerHTML = '';
 
     const levels = await fetchLevelsByCategory(category);
-
+    // make the level list available to app.js for next level navigation
+    window.currentCategoryLevels = levels;
+    
     if (levels.length === 0) {
         grid.innerHTML = '<div class="ls-empty">No levels found for this category yet.</div>';
         return;

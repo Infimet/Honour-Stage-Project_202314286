@@ -38,3 +38,54 @@ async function signOut() {
     const { error } = await db.auth.signOut();
     if (error) console.error('sign out failed:', error.message);
 }
+
+// saves or updates a students progress for a level
+// uses upsert so replaying a level updates the row instead of duplicating it
+// never downgrades stars, just only keeps the best score
+async function saveProgress(levelId, starsEarned) {
+    const user = await getCurrentUser();
+    if (!user) {
+        console.warn('saveProgress: no user logged in, skipping.');
+        return;
+    }
+
+    // check for an existing record first to protect star count
+    const { data: existing } = await db
+        .from('student_progress')
+        .select('stars_earned')
+        .eq('student_id', user.id)
+        .eq('level_id', levelId)
+        .maybeSingle();
+
+    const finalStars = existing
+        ? Math.max(existing.stars_earned ?? 0, starsEarned)
+        : starsEarned;
+
+    const { error } = await db
+        .from('student_progress')
+        .upsert(
+            { student_id: user.id, level_id: levelId, completed: true, stars_earned: finalStars },
+            { onConflict: 'student_id,level_id' }
+        );
+
+    if (error) console.error('could not save progress:', error.message);
+}
+
+// fetches all progress rows for the currently logged in student
+// rls ensures only ever get back their own rows
+async function fetchMyProgress() {
+    const user = await getCurrentUser();
+    if (!user) return [];
+
+    const { data, error } = await db
+        .from('student_progress')
+        .select('*')
+        .eq('student_id', user.id);
+
+    if (error) {
+        console.error('could not fetch progress:', error.message);
+        return [];
+    }
+
+    return data;
+}
