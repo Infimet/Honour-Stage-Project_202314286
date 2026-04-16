@@ -406,3 +406,25 @@ h2 {
     font-size: 13px;
     margin-bottom: 8px;
 }
+
+/* --- sign out button --- */
+
+.sign-out-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 6px 16px;
+    background: white;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    color: #888;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.sign-out-btn:hover {
+    border-color: #e53935;
+    color: #e53935;
+}

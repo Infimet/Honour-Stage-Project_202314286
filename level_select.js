@@ -72,3 +72,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initTabs();
     renderLevelSelect('basics');
 });
+
+// sign out button
+document.getElementById('signOutBtn').addEventListener('click', async () => {
+    await signOut();
+    window.location.href = 'login.html';
+});
