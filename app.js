@@ -50,7 +50,14 @@ javascript.javascriptGenerator.forBlock['turn_left'] = function(block) {
 // 3. initialise application
 var workspace = null;
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // bounce unauthenticated users back to the login page
+    const user = await getCurrentUser();
+    if (!user) {
+        window.location.href = 'login.html';
+        return;
+    }
+
     const canvas = document.getElementById('robotCanvas');
     window.robotInstance = new Robot(canvas);
 

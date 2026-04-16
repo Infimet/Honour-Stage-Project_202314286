@@ -27,3 +27,14 @@ function calculateStars(blocksUsed, optimalBlockCount) {
     if (blocksUsed <= optimalBlockCount * 1.5)  return 2;
     return 1;
 }
+
+// returns the currently logged in user, or null
+async function getCurrentUser() {
+    const { data: { user } } = await db.auth.getUser();
+    return user;
+}
+
+async function signOut() {
+    const { error } = await db.auth.signOut();
+    if (error) console.error('sign out failed:', error.message);
+}
