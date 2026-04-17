@@ -9,7 +9,7 @@ const DIFFICULTY_LABELS = {
 };
 
 // builds a single card element from a level row
-function buildLevelCard(level, index) {
+function buildLevelCard(level, progress, index) {
     const card = document.createElement('div');
     card.className = 'ls-card';
 
@@ -18,9 +18,7 @@ function buildLevelCard(level, index) {
         <div class="ls-card-title">${level.title}</div>
         <div class="ls-card-desc">${level.description ?? ''}</div>
         <div class="ls-card-stars">
-            <span class="ls-star">★</span>
-            <span class="ls-star">★</span>
-            <span class="ls-star">★</span>
+            ${[1, 2, 3].map(n => `<span class="ls-star ${n <= (progress?.stars_earned ?? 0) ? 'ls-star--earned' : ''}">★</span>`).join('')}
         </div>
     `;
 
@@ -34,17 +32,24 @@ async function renderLevelSelect(category = 'basics') {
     const grid = document.getElementById('levelGrid');
     grid.innerHTML = '';
 
-    const levels = await fetchLevelsByCategory(category);
-    // make the level list available to app.js for next level navigation
+    const [levels, progressRows] = await Promise.all([
+        fetchLevelsByCategory(category),
+        fetchMyProgress()
+  ]);
     window.currentCategoryLevels = levels;
-    
+
     if (levels.length === 0) {
         grid.innerHTML = '<div class="ls-empty">No levels found for this category yet.</div>';
         return;
     }
 
+    const progressMap = progressRows.reduce((map, row) => {
+        map[row.level_id] = row;
+        return map;
+    }, {});
+
     levels.forEach((level, i) => {
-        grid.appendChild(buildLevelCard(level, i));
+        grid.appendChild(buildLevelCard(level, progressMap[level.id] ?? null, i));
     });
 }
 

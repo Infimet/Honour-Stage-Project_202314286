@@ -428,3 +428,21 @@ h2 {
     border-color: #e53935;
     color: #e53935;
 }
+
+/* --- win modal stars --- */
+
+.win-stars {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.win-star {
+    font-size: 2rem;
+    color: #ddd;
+}
+
+.win-star--earned {
+    color: #f9c84a;
+}

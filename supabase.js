@@ -23,9 +23,9 @@ async function fetchLevelsByCategory(category = 'basics') {
 
 // calculates star rating based on block efficiency
 function calculateStars(blocksUsed, optimalBlockCount) {
-    if (blocksUsed <= optimalBlockCount)        return 3;
-    if (blocksUsed <= optimalBlockCount * 1.5)  return 2;
-    return 1;
+    if (blocksUsed <= optimalBlockCount)        return 3; // perfect
+    if (blocksUsed <= optimalBlockCount * 2)    return 2; // reasonable
+    return 1;                                             // completed but very inefficient
 }
 
 // returns the currently logged in user, or null

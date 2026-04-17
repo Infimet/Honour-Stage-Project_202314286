@@ -87,9 +87,9 @@ function runCode() {
                 const optimal    = window.activeLevel?.optimal_block_count ?? blocksUsed;
                 const stars      = calculateStars(blocksUsed, optimal);
 
-                if (window.activeLevel && typeof saveProgress === 'function') {
-                    await saveProgress(window.activeLevel.id, stars);
-              }
+                if (window.activeLevel) await saveProgress(window.activeLevel.id, stars);
+                showWinStars(stars);
+                document.getElementById('winModal').classList.remove('hidden');
 
                 document.getElementById('winModal').classList.remove('hidden');
             }, 100);
@@ -137,4 +137,12 @@ function returnToLevelSelect() {
 
     const activeTab = document.querySelector('#lsTabs .ls-tab--active');
     if (activeTab) renderLevelSelect(activeTab.dataset.category);
+}
+
+// renders star icons in the win modal based on stars earned
+function showWinStars(stars) {
+    const container = document.getElementById('winStars');
+    container.innerHTML = [1, 2, 3]
+        .map(n => `<span class="win-star ${n <= stars ? 'win-star--earned' : ''}">★</span>`)
+        .join('');
 }
