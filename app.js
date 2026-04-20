@@ -90,8 +90,6 @@ function runCode() {
                 if (window.activeLevel) await saveProgress(window.activeLevel.id, stars);
                 showWinStars(stars);
                 document.getElementById('winModal').classList.remove('hidden');
-
-                document.getElementById('winModal').classList.remove('hidden');
             }, 100);
         }
     } catch (e) {

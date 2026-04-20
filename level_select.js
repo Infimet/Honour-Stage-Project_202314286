@@ -51,6 +51,17 @@ async function renderLevelSelect(category = 'basics') {
     levels.forEach((level, i) => {
         grid.appendChild(buildLevelCard(level, progressMap[level.id] ?? null, i));
     });
+
+    // updates the footer stat counters
+function updateFooterStats(progressRows) {
+    const completed  = progressRows.filter(r => r.completed).length;
+    const totalStars = progressRows.reduce((sum, r) => sum + (r.stars_earned ?? 0), 0);
+
+    document.getElementById('lsTotalStars').textContent  = totalStars;
+    document.getElementById('lsCompletedCount').textContent = completed;
+    }
+
+    updateFooterStats(progressRows);
 }
 
 // hides level select and launches the chosen level
