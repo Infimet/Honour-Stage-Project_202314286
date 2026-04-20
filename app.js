@@ -1,50 +1,50 @@
-// main application logic - foundation phase (phase 2)
+// main application logic - foundation phase (phase 2) + animation queue wiring (sprint 5)
 
 // 1. define custom blocks
 Blockly.Blocks['move_forward'] = {
-  init: function() {
-    this.appendDummyInput()
-        .appendField("Move Forward");
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
-    this.setColour(160);
-    this.setTooltip("Moves the robot one step forward");
-  }
+    init: function() {
+        this.appendDummyInput()
+            .appendField("Move Forward");
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(160);
+        this.setTooltip("Moves the robot one step forward");
+    }
 };
 
 Blockly.Blocks['turn_right'] = {
-  init: function() {
-    this.appendDummyInput()
-        .appendField("Turn Right ↻");
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
-    this.setColour(160);
-    this.setTooltip("Turns the robot 90 degrees right");
-  }
+    init: function() {
+        this.appendDummyInput()
+            .appendField("Turn Right ↻");
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(160);
+        this.setTooltip("Turns the robot 90 degrees right");
+    }
 };
 
 Blockly.Blocks['turn_left'] = {
-  init: function() {
-    this.appendDummyInput()
-        .appendField("Turn Left ↺");
-    this.setPreviousStatement(true, null);
-    this.setNextStatement(true, null);
-    this.setColour(160);
-    this.setTooltip("Turns the robot 90 degrees left");
-  }
+    init: function() {
+        this.appendDummyInput()
+            .appendField("Turn Left ↺");
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(160);
+        this.setTooltip("Turns the robot 90 degrees left");
+    }
 };
 
 // 2. define javascript generation for blocks
 javascript.javascriptGenerator.forBlock['move_forward'] = function(block) {
-  return 'window.robotInstance.moveForward();\n'; 
+    return 'window.robotInstance.moveForward();\n';
 };
 
 javascript.javascriptGenerator.forBlock['turn_right'] = function(block) {
-  return 'window.robotInstance.turnRight();\n'; 
+    return 'window.robotInstance.turnRight();\n';
 };
 
 javascript.javascriptGenerator.forBlock['turn_left'] = function(block) {
-  return 'window.robotInstance.turnLeft();\n'; 
+    return 'window.robotInstance.turnLeft();\n';
 };
 
 // 3. initialise application
@@ -74,26 +74,45 @@ document.addEventListener('DOMContentLoaded', async function() {
 });
 
 // 4. execution logic
+// runCode now sets a completion callback on the robot rather than using setTimeout
+// the callback fires after the animation queue fully drains
 function runCode() {
-    var code = javascript.javascriptGenerator.workspaceToCode(workspace);
-    
-    try {
-        eval(code); 
-        
-        // win state
-        if (window.robotInstance.checkWin()) {
-            setTimeout(async () => {
-                const blocksUsed = workspace.getAllBlocks(false).length;
-                const optimal    = window.activeLevel?.optimal_block_count ?? blocksUsed;
-                const stars      = calculateStars(blocksUsed, optimal);
+    const code = javascript.javascriptGenerator.workspaceToCode(workspace);
 
-                if (window.activeLevel) await saveProgress(window.activeLevel.id, stars);
-                showWinStars(stars);
-                document.getElementById('winModal').classList.remove('hidden');
-            }, 100);
+    // disable run button for the duration of the animation sequence
+    const runBtn = document.getElementById('runButton');
+    runBtn.disabled = true;
+
+    const onComplete = async () => {
+        runBtn.disabled = false;
+
+        if (window.robotInstance.checkWin()) {
+            const blocksUsed = workspace.getAllBlocks(false).length;
+            const optimal = window.activeLevel?.optimal_block_count ?? blocksUsed;
+            const stars = calculateStars(blocksUsed, optimal);
+
+            if (window.activeLevel) await saveProgress(window.activeLevel.id, stars);
+            showWinStars(stars);
+            document.getElementById('winModal').classList.remove('hidden');
+        }
+    };
+
+    // set callback before eval — rAF is async so it cannot fire before eval returns
+    window.robotInstance.onQueueComplete = onComplete;
+
+    try {
+        eval(code);
+
+        // edge case: empty workspace produces no commands, so queue never drains
+        // fire the callback immediately in that case
+        if (!window.robotInstance.isAnimating && window.robotInstance.commandQueue.length === 0) {
+            window.robotInstance.onQueueComplete = null;
+            onComplete();
         }
     } catch (e) {
-        console.error("Execution Error:", e);
+        window.robotInstance.onQueueComplete = null;
+        runBtn.disabled = false;
+        console.error('Execution Error:', e);
         alert('Error executing code: ' + e);
     }
 }
@@ -104,7 +123,6 @@ function resetApp() {
 
 // next level logic
 let currentLevel = 1;
-let activeLevel = null;
 
 function nextLevel() {
     document.getElementById('winModal').classList.add('hidden');
@@ -118,14 +136,9 @@ function nextLevel() {
         window.robotInstance.loadLevelFromDb(next);
         window.activeLevel = next;
     } else {
-        // no more levels in this category, go back to menu
+        // no more levels in this category — return to menu
         returnToLevelSelect();
     }
-}
-
-
-function resetApp() {
-    window.robotInstance.reset();
 }
 
 function returnToLevelSelect() {
