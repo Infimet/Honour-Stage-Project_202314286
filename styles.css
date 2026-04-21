@@ -13,11 +13,24 @@ body {
     background-color: #f0f0f0;
 }
 
-.container {
+/* --- game container layout --- */
+
+/* outer wrapper stacks the banner above the columns */
+#gameContainer {
     display: flex;
+    flex-direction: column;
     height: 100vh;
-    gap: 10px;
+    gap: 0;
     padding: 10px;
+    box-sizing: border-box;
+}
+
+/* the two-column split lives inside this */
+.game-columns {
+    display: flex;
+    flex: 1;
+    gap: 10px;
+    min-height: 0;
 }
 
 .column {
@@ -57,7 +70,7 @@ h2 {
     margin-bottom: 10px;
 }
 
-.run-button, .reset-button {
+.run-button, .reset-button, .back-button {
     padding: 12px 30px;
     font-size: 16px;
     font-weight: bold;
@@ -81,6 +94,11 @@ h2 {
     background-color: #3d8b40;
 }
 
+.run-button:disabled {
+    background-color: #a5d6a7;
+    cursor: not-allowed;
+}
+
 .reset-button {
     background-color: #2196F3;
 }
@@ -93,37 +111,69 @@ h2 {
     background-color: #0960a6;
 }
 
-@media (max-width: 768px) {
-    .container {
-        flex-direction: column;
-    }
-    
-    .left-column {
-        min-width: auto;
-    }
-    
-    #robotCanvas {
-        max-width: 100%;
-        height: auto;
-    }
+.back-button {
+    background-color: #9E9E9E;
+}
+
+.back-button:hover {
+    background-color: #757575;
+}
+
+/* --- objective banner --- */
+
+.objective-banner {
+    background-color: white;
+    border-radius: 8px;
+    padding: 12px 20px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-left: 4px solid #4CAF50;
+}
+
+.objective-banner-inner {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.objective-label {
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #4CAF50;
+    white-space: nowrap;
+}
+
+.objective-title {
+    font-size: 15px;
+    font-weight: bold;
+    color: #333;
+}
+
+.objective-desc {
+    font-size: 13px;
+    color: #666;
 }
 
 /* --- level complete modal styles --- */
+
 .modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7); /* dark overlay */
+    background-color: rgba(0, 0, 0, 0.7);
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 1000; /* keeps it on top of everything */
+    z-index: 1000;
 }
 
 .modal.hidden {
-    display: none; /* hides the modal until user wins */
+    display: none;
 }
 
 .modal-content {
@@ -445,4 +495,21 @@ h2 {
 
 .win-star--earned {
     color: #f9c84a;
+}
+
+/* --- responsive --- */
+
+@media (max-width: 768px) {
+    .game-columns {
+        flex-direction: column;
+    }
+
+    .left-column {
+        min-width: auto;
+    }
+
+    #robotCanvas {
+        max-width: 100%;
+        height: auto;
+    }
 }

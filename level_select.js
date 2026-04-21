@@ -35,7 +35,8 @@ async function renderLevelSelect(category = 'basics') {
     const [levels, progressRows] = await Promise.all([
         fetchLevelsByCategory(category),
         fetchMyProgress()
-  ]);
+    ]);
+
     window.currentCategoryLevels = levels;
 
     if (levels.length === 0) {
@@ -52,22 +53,26 @@ async function renderLevelSelect(category = 'basics') {
         grid.appendChild(buildLevelCard(level, progressMap[level.id] ?? null, i));
     });
 
-    // updates the footer stat counters
+    updateFooterStats(progressRows);
+}
+
+// updates the footer stat counters
 function updateFooterStats(progressRows) {
-    const completed  = progressRows.filter(r => r.completed).length;
+    const completed = progressRows.filter(r => r.completed).length;
     const totalStars = progressRows.reduce((sum, r) => sum + (r.stars_earned ?? 0), 0);
 
-    document.getElementById('lsTotalStars').textContent  = totalStars;
+    document.getElementById('lsTotalStars').textContent = totalStars;
     document.getElementById('lsCompletedCount').textContent = completed;
-    }
-
-    updateFooterStats(progressRows);
 }
 
 // hides level select and launches the chosen level
 function launchLevel(level) {
     document.getElementById('levelSelectScreen').classList.add('hidden');
     document.getElementById('gameContainer').classList.remove('hidden');
+
+    // populate the objective banner with this level's title and description
+    document.getElementById('objectiveTitle').textContent = level.title ?? '';
+    document.getElementById('objectiveDesc').textContent = level.description ?? '';
 
     window.robotInstance.loadLevelFromDb(level);
     window.activeLevel = level;
