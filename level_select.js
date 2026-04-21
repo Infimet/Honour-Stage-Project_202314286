@@ -70,6 +70,11 @@ function launchLevel(level) {
     document.getElementById('levelSelectScreen').classList.add('hidden');
     document.getElementById('gameContainer').classList.remove('hidden');
 
+    // blockly measures its container at inject time — if gameContainer was hidden,
+    // the workspace dimensions are zero and it renders broken. force a recalculation
+    // now that the container is visible. (workspace is declared as var in app.js)
+    if (typeof workspace !== 'undefined' && workspace) Blockly.svgResize(workspace);
+
     // populate the objective banner with this level's title and description
     document.getElementById('objectiveTitle').textContent = level.title ?? '';
     document.getElementById('objectiveDesc').textContent = level.description ?? '';
