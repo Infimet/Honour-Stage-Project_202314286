@@ -150,10 +150,47 @@ function returnToLevelSelect() {
     if (activeTab) renderLevelSelect(activeTab.dataset.category);
 }
 
-// renders star icons in the win modal based on stars earned
+// renders star icons in the win modal with sequential pop-in animation
+// 150ms gap between each star per UX research (Gelman 2014)
 function showWinStars(stars) {
     const container = document.getElementById('winStars');
+
+    // build all three stars first, unearned ones stay faded
     container.innerHTML = [1, 2, 3]
         .map(n => `<span class="win-star ${n <= stars ? 'win-star--earned' : ''}">★</span>`)
         .join('');
+
+    // trigger pop-in animation sequentially with 150ms stagger
+    const starEls = container.querySelectorAll('.win-star');
+    starEls.forEach((el, i) => {
+        setTimeout(() => {
+            el.classList.add('win-star--animate');
+        }, i * 150);
+    });
+
+    // fire confetti burst after the last star lands
+    setTimeout(() => spawnConfetti(), stars * 150 + 100);
+}
+
+// spawns a brief confetti burst inside the modal
+// pure js/css — no library needed for this scale (Gapsy Studio 2026)
+function spawnConfetti() {
+    const modal   = document.querySelector('.modal-content');
+    const colours = ['#3DAA6E', '#4A90D9', '#F5A623', '#E53935', '#9B59B6'];
+    const count   = 28;
+
+    for (let i = 0; i < count; i++) {
+        const el = document.createElement('div');
+        el.className = 'confetti-particle';
+        el.style.left             = Math.random() * 100 + '%';
+        el.style.top              = Math.random() * 40 + '%';
+        el.style.backgroundColor  = colours[Math.floor(Math.random() * colours.length)];
+        el.style.animationDelay   = Math.random() * 0.3 + 's';
+        el.style.animationDuration = (0.9 + Math.random() * 0.6) + 's';
+        el.style.transform        = `rotate(${Math.random() * 360}deg)`;
+        modal.appendChild(el);
+
+        // clean up after animation completes
+        el.addEventListener('animationend', () => el.remove());
+    }
 }

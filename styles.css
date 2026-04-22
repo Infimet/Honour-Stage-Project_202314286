@@ -1,20 +1,24 @@
-/* css custom properties — single source of truth for the palette
-   colours locked in from UX research doc, April 2026
+/* css custom properties
+   colours from UX research doc, April 2026
    ref: Brom et al. (2025) — muted palette outperforms vivid for 7-11 age group */
-:root {
-    --colour-bg:        #F5F7FA;
-    --colour-green:     #3DAA6E;
-    --colour-green-dk:  #2e8a57;
-    --colour-blue:      #4A90D9;
-    --colour-blue-dk:   #3070b3;
-    --colour-amber:     #F5A623;
-    --colour-error:     #E53935;
-    --colour-text:      #1A1A2E;
-    --colour-text-muted:#6B7280;
-    --colour-border:    #E5E7EB;
-    --colour-white:     #FFFFFF;
-    --colour-surface:   #FFFFFF;
 
+:root {
+    --colour-bg:         #F5F7FA;
+    --colour-green:      #3DAA6E;
+    --colour-green-dk:   #2e8a57;
+    --colour-green-lt:   #e8f5ee;
+    --colour-blue:       #4A90D9;
+    --colour-blue-dk:    #3070b3;
+    --colour-amber:      #F5A623;
+    --colour-error:      #E53935;
+    --colour-text:       #1A1A2E;
+    --colour-text-muted: #6B7280;
+    --colour-border:     #E5E7EB;
+    --colour-white:      #FFFFFF;
+    --colour-surface:    #FFFFFF;
+
+    /* nunito throughout — rounded letterforms reduce b/d reversal errors
+       in 7-11 age group (Gelman 2014; BDA dyslexia style guide) */
     --font-main: 'Nunito', Arial, sans-serif;
 
     --radius-sm: 6px;
@@ -34,7 +38,7 @@
 }
 
 html {
-    font-size: 16px;
+    font-size: 16px; /* minimum per research — never below 16px */
 }
 
 body {
@@ -49,6 +53,7 @@ body {
     display: none !important;
 }
 
+
 /* --- level select screen --- */
 
 .ls-screen {
@@ -60,7 +65,7 @@ body {
 }
 
 /* subtle dot-grid texture — kept at low opacity so it doesn't compete
-   with interactive elements (Sweller 1988: avoid extraneous visual load) */
+   with interactive elements (Sweller 1988: avoid extraneous cognitive load) */
 .ls-bg-grid {
     position: fixed;
     inset: 0;
@@ -106,7 +111,6 @@ body {
 }
 
 .ls-logo-text {
-    font-family: var(--font-main);
     font-size: 2rem;
     font-weight: 800;
     color: var(--colour-green);
@@ -140,8 +144,8 @@ body {
 }
 
 /* --- category tabs ---
-   pill shape with 48px min height — research specifies large touch
-   targets for children aged 7-11 (Gelman 2014) */
+   min 48px height for child-appropriate touch targets
+   (UserTesting research via Gelman 2014: 60-80px hit areas) */
 
 .ls-tabs {
     display: flex;
@@ -192,8 +196,7 @@ body {
     box-shadow: 0 2px 8px rgba(61, 170, 110, 0.35) !important;
 }
 
-/* locked tabs greyed out — communicates progressive disclosure
-   without needing explanatory text (Sweller 1988) */
+/* locked: greyed out — progressive disclosure per Sweller (1988) */
 .ls-tab--locked {
     opacity: 0.45;
     cursor: not-allowed;
@@ -255,8 +258,8 @@ body {
     flex: 1;
 }
 
-/* amber for earned stars — warm reward signal, red reserved for errors only
-   (Brom et al. 2025: colour semantics matter for children) */
+/* amber for reward signal — warm and positive, never alarming
+   red is reserved strictly for errors (Brom et al. 2025) */
 .ls-card-stars {
     display: flex;
     gap: 4px;
@@ -266,6 +269,7 @@ body {
 .ls-star {
     font-size: 18px;
     color: var(--colour-border);
+    transition: color 0.15s ease;
 }
 
 .ls-star--earned {
@@ -273,23 +277,18 @@ body {
 }
 
 /* --- skeleton loading cards ---
-   shimmer signals content is loading — prevents perceived delay
-   frustration (Hattie 2009: immediate feedback) */
+   shimmer gives immediate feedback that content is loading
+   (Hattie 2009: immediate feedback reduces frustration) */
 
 @keyframes shimmer {
     0%   { background-position: -400px 0; }
-    100% { background-position: 400px 0; }
+    100% { background-position:  400px 0; }
 }
 
 .ls-skeleton {
     border-radius: var(--radius-lg);
     height: 160px;
-    background: linear-gradient(
-        90deg,
-        #E5E7EB 25%,
-        #F3F4F6 50%,
-        #E5E7EB 75%
-    );
+    background: linear-gradient(90deg, #E5E7EB 25%, #F3F4F6 50%, #E5E7EB 75%);
     background-size: 800px 100%;
     animation: shimmer 1.4s ease-in-out infinite;
 }
@@ -308,7 +307,7 @@ body {
     box-shadow: var(--shadow-sm);
 }
 
-/* --- footer stats --- */
+/* --- stats footer --- */
 
 .ls-footer {
     display: flex;
@@ -369,7 +368,8 @@ body {
     color: var(--colour-error);
 }
 
-/* --- game screen (full redesign in next commit) --- */
+
+/* --- game screen --- */
 
 #gameContainer {
     display: flex;
@@ -377,6 +377,7 @@ body {
     height: 100vh;
     padding: 10px;
     box-sizing: border-box;
+    gap: 0;
 }
 
 .game-columns {
@@ -389,8 +390,8 @@ body {
 .column {
     flex: 1;
     background-color: var(--colour-surface);
-    border-radius: 8px;
-    padding: 20px;
+    border-radius: var(--radius-lg);
+    padding: 18px 20px;
     box-shadow: var(--shadow-sm);
     display: flex;
     flex-direction: column;
@@ -398,52 +399,72 @@ body {
 
 .left-column {
     min-width: 400px;
-    overflow: hidden; /* prevents blockly svg from escaping the flex container */
+    overflow: hidden;
 }
 
 .right-column {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: flex-start;
 }
 
-h2 {
-    margin-bottom: 15px;
-    color: var(--colour-text);
-    font-family: var(--font-main);
+/* column headings use a subtle green pill to tie into the design language */
+.column-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.column-heading-icon {
+    font-size: 1.1rem;
+}
+
+.column-heading h2 {
+    font-size: 1rem;
     font-weight: 800;
+    color: var(--colour-text);
+    letter-spacing: -0.01em;
 }
 
 #blocklyDiv {
     flex: 1;
     width: 100%;
-    min-height: 0; /* let flex control the height — min-height: 500px was overflowing the viewport */
+    min-height: 0;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
 }
 
 #robotCanvas {
     border: 2px solid var(--colour-border);
     background-color: var(--colour-white);
-    margin-bottom: 10px;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
+    max-width: 100%;
 }
 
-.run-button,
-.reset-button,
-.back-button {
-    padding: 12px 24px;
-    font-family: var(--font-main);
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--colour-white);
-    border: none;
-    border-radius: var(--radius-sm);
-    cursor: pointer;
+/* button row — run is primary full-width, reset+back share the row below
+   keeps the primary action prominent without making all buttons look equal */
+.game-btn-row {
+    display: flex;
+    gap: 8px;
     margin-top: 10px;
-    transition: background-color 0.2s ease;
 }
 
 .run-button {
+    width: 100%;
+    padding: 13px 20px;
+    font-family: var(--font-main);
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--colour-white);
     background-color: var(--colour-green);
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.18s ease, opacity 0.18s ease;
+    letter-spacing: 0.01em;
 }
 
 .run-button:hover {
@@ -453,6 +474,20 @@ h2 {
 .run-button:disabled {
     background-color: #a8d5bc;
     cursor: not-allowed;
+}
+
+.reset-button,
+.back-button {
+    flex: 1;
+    padding: 11px 14px;
+    font-family: var(--font-main);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--colour-white);
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background-color 0.18s ease;
 }
 
 .reset-button {
@@ -476,7 +511,7 @@ h2 {
 .objective-banner {
     background: var(--colour-surface);
     border-radius: var(--radius-md);
-    padding: 12px 20px;
+    padding: 11px 18px;
     margin-bottom: 10px;
     box-shadow: var(--shadow-sm);
     border-left: 4px solid var(--colour-green);
@@ -510,6 +545,7 @@ h2 {
     color: var(--colour-text-muted);
 }
 
+
 /* --- win modal --- */
 
 .modal {
@@ -520,7 +556,7 @@ h2 {
     justify-content: center;
     align-items: center;
     z-index: 1000;
-    backdrop-filter: blur(2px);
+    backdrop-filter: blur(3px);
 }
 
 .modal.hidden {
@@ -529,26 +565,35 @@ h2 {
 
 .modal-content {
     background: var(--colour-surface);
-    padding: 40px 48px;
+    padding: 44px 52px;
     border-radius: var(--radius-lg);
     text-align: center;
     box-shadow: var(--shadow-lg);
-    max-width: 420px;
+    max-width: 440px;
     width: 90%;
+    position: relative;
+    overflow: hidden;
 }
 
 .modal-emoji {
-    font-size: 3rem;
-    margin-bottom: 12px;
+    font-size: 3.2rem;
     display: block;
+    margin-bottom: 10px;
+    /* gentle bounce-in on modal open */
+    animation: emoji-bounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes emoji-bounce {
+    from { transform: scale(0.5); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
 }
 
 .modal-content h2 {
     font-family: var(--font-main);
-    font-size: 1.75rem;
+    font-size: 1.8rem;
     font-weight: 800;
     color: var(--colour-green);
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 }
 
 .modal-content p {
@@ -559,27 +604,77 @@ h2 {
     line-height: 1.5;
 }
 
+/* win stars — each star pops in sequentially via JS-applied animation-delay
+   150ms gap between stars per UX research (Gelman 2014: each star should
+   feel like a distinct achievement, not an undifferentiated result) */
+
 .win-stars {
     display: flex;
-    gap: 10px;
+    gap: 12px;
     justify-content: center;
     margin-bottom: 28px;
 }
 
 .win-star {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
     color: var(--colour-border);
+    display: inline-block;
+    /* starts hidden — animation applied by showWinStars() */
+    opacity: 0;
+    transform: scale(0.4);
 }
 
 .win-star--earned {
     color: var(--colour-amber);
 }
 
+/* pop-in keyframe — applied per-star with staggered delay in app.js */
+@keyframes star-pop {
+    0%   { opacity: 0; transform: scale(0.4) rotate(-15deg); }
+    60%  { transform: scale(1.25) rotate(5deg); }
+    100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+.win-star--animate {
+    animation: star-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* modal buttons — run-button style inherited, reset-button for back */
+.modal-content .run-button {
+    margin-top: 0;
+}
+
+.modal-content .reset-button {
+    display: block;
+    width: 100%;
+    padding: 11px 20px;
+    margin-top: 10px;
+}
+
+/* confetti particles — spawned by JS, cleaned up after animation */
+.confetti-particle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    opacity: 0;
+    pointer-events: none;
+    animation: confetti-fall 1.2s ease-in forwards;
+}
+
+@keyframes confetti-fall {
+    0%   { opacity: 1; transform: translateY(0) rotate(0deg); }
+    100% { opacity: 0; transform: translateY(160px) rotate(540deg); }
+}
+
+
 /* --- auth / login page --- */
 
 .auth-wrapper {
     min-height: 100vh;
     background-color: var(--colour-bg);
+    background-image: radial-gradient(circle, #c8d6e5 1.2px, transparent 1.2px);
+    background-size: 28px 28px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -588,19 +683,30 @@ h2 {
 .auth-card {
     background: var(--colour-surface);
     border-radius: var(--radius-lg);
-    padding: 40px;
+    padding: 44px 40px;
     width: 100%;
     max-width: 400px;
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--shadow-lg);
+}
+
+.auth-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 6px;
+}
+
+.auth-logo-icon {
+    font-size: 2rem;
 }
 
 .auth-title {
     font-family: var(--font-main);
-    font-size: 1.5rem;
+    font-size: 1.8rem;
     font-weight: 800;
     color: var(--colour-green);
-    margin-bottom: 4px;
-    text-align: center;
+    letter-spacing: -0.02em;
 }
 
 .auth-subtitle {
@@ -609,7 +715,7 @@ h2 {
     font-size: 14px;
     font-weight: 600;
     text-align: center;
-    margin-bottom: 24px;
+    margin-bottom: 28px;
 }
 
 .auth-tabs {
@@ -681,6 +787,7 @@ h2 {
     font-weight: 600;
     margin-bottom: 8px;
 }
+
 
 /* --- responsive --- */
 

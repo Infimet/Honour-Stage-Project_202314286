@@ -28,7 +28,7 @@
                         <span class="ls-logo-icon">🤖</span>
                         <span class="ls-logo-text">NAG-25-953</span>
                     </div>
-                    <p class="ls-tagline">Learn to code. One block at a time.</p>
+                    <p class="ls-tagline">Honour-Stage-Project_202314286</p>
                 </div>
                 <button id="signOutBtn" class="sign-out-btn">Sign Out</button>
             </header>
@@ -111,7 +111,10 @@
         <div class="game-columns">
 
             <div class="column left-column">
-                <h2>Block Programming</h2>
+                <div class="column-heading">
+                    <span class="column-heading-icon">🧩</span>
+                    <h2>Block Programming</h2>
+                </div>
 
                 <div id="blocklyDiv"></div>
 
@@ -132,13 +135,19 @@
                     </category>
                 </xml>
 
+                <!-- run is primary full-width; reset and back share the row below -->
                 <button id="runButton" class="run-button">▶ Run Code</button>
-                <button id="resetButton" class="reset-button">↺ Reset</button>
-                <button id="backButton" class="back-button">← Level Select</button>
+                <div class="game-btn-row">
+                    <button id="resetButton" class="reset-button">↺ Reset</button>
+                    <button id="backButton" class="back-button">← Level Select</button>
+                </div>
             </div>
 
             <div class="column right-column">
-                <h2>Robot Canvas</h2>
+                <div class="column-heading">
+                    <span class="column-heading-icon">🤖</span>
+                    <h2>Robot Canvas</h2>
+                </div>
                 <canvas id="robotCanvas" width="600" height="600"></canvas>
             </div>
 
