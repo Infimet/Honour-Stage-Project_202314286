@@ -9,9 +9,19 @@ const DIFFICULTY_LABELS = {
 };
 
 // builds a single card element from a level row
-function buildLevelCard(level, progress, index) {
+// isLocked: true if the previous level in the category hasn't been completed yet
+function buildLevelCard(level, progress, isLocked) {
     const card = document.createElement('div');
-    card.className = 'ls-card';
+    card.className = isLocked ? 'ls-card ls-card--locked' : 'ls-card';
+
+    if (isLocked) {
+        card.innerHTML = `
+            <div class="ls-card-badge">${DIFFICULTY_LABELS[level.difficulty] ?? 'Level ' + level.difficulty}</div>
+            <div class="ls-card-title">${level.title}</div>
+            <div class="ls-card-desc ls-card-lock-msg">🔒 Complete the previous level to unlock this one.</div>
+        `;
+        return card;
+    }
 
     card.innerHTML = `
         <div class="ls-card-badge">${DIFFICULTY_LABELS[level.difficulty] ?? 'Level ' + level.difficulty}</div>
@@ -50,7 +60,14 @@ async function renderLevelSelect(category = 'basics') {
     }, {});
 
     levels.forEach((level, i) => {
-        grid.appendChild(buildLevelCard(level, progressMap[level.id] ?? null, i));
+        // first level in the category is always unlocked.
+        // every subsequent level requires the previous one to be completed.
+        // completed levels remain accessible for star improvement (Duolingo model —
+        // low-stakes learning environment, progress never downgraded).
+        const previousCompleted = i === 0 || progressMap[levels[i - 1].id]?.completed === true;
+        const isLocked = !previousCompleted;
+
+        grid.appendChild(buildLevelCard(level, progressMap[level.id] ?? null, isLocked));
     });
 
     updateFooterStats(progressRows);
@@ -58,10 +75,10 @@ async function renderLevelSelect(category = 'basics') {
 
 // updates the footer stat counters
 function updateFooterStats(progressRows) {
-    const completed = progressRows.filter(r => r.completed).length;
+    const completed  = progressRows.filter(r => r.completed).length;
     const totalStars = progressRows.reduce((sum, r) => sum + (r.stars_earned ?? 0), 0);
 
-    document.getElementById('lsTotalStars').textContent = totalStars;
+    document.getElementById('lsTotalStars').textContent  = totalStars;
     document.getElementById('lsCompletedCount').textContent = completed;
 }
 
@@ -70,20 +87,27 @@ function launchLevel(level) {
     document.getElementById('levelSelectScreen').classList.add('hidden');
     document.getElementById('gameContainer').classList.remove('hidden');
 
-    // blockly measures its container at inject time — if gameContainer was hidden,
+    // blockly measures its container at inject time - if gameContainer was hidden,
     // the workspace dimensions are zero and it renders broken. force a recalculation
     // now that the container is visible. (workspace is declared as var in app.js)
     if (typeof workspace !== 'undefined' && workspace) Blockly.svgResize(workspace);
 
-    // populate the objective banner with this level's title and description
-    document.getElementById('objectiveTitle').textContent = level.title ?? '';
-    document.getElementById('objectiveDesc').textContent = level.description ?? '';
+    // update toolbox to match this level's category - progressive disclosure
+    // (Sweller 1988: don't show blocks the student hasn't been introduced to yet)
+    if (typeof updateToolboxForCategory === 'function') {
+        updateToolboxForCategory(level.category);
+    }
+
+    // populate the objective banner
+    if (typeof updateObjectiveBanner === 'function') {
+        updateObjectiveBanner(level);
+    }
 
     window.robotInstance.loadLevelFromDb(level);
     window.activeLevel = level;
 }
 
-// wire up tab buttons
+// wire up category tab buttons
 function initTabs() {
     const tabs = document.querySelectorAll('#lsTabs .ls-tab:not([disabled])');
 
@@ -96,9 +120,42 @@ function initTabs() {
     });
 }
 
+// checks which categories the student has unlocked and enables/disables tabs accordingly
+// called on load and whenever returning to the level select screen
+async function refreshCategoryTabs() {
+    const unlocked = await fetchCategoryUnlockStatus();
+
+    const tabMap = {
+        loops:        document.querySelector('[data-category="loops"]'),
+        obstacles:    document.querySelector('[data-category="obstacles"]'),
+        conditionals: document.querySelector('[data-category="conditionals"]')
+    };
+
+    Object.entries(unlocked).forEach(([category, isUnlocked]) => {
+        const tab = tabMap[category];
+        if (!tab) return;
+
+        if (isUnlocked) {
+            tab.disabled = false;
+            tab.classList.remove('ls-tab--locked');
+
+            // wire up click handler if not already done
+            if (!tab.dataset.wired) {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('#lsTabs .ls-tab').forEach(t => t.classList.remove('ls-tab--active'));
+                    tab.classList.add('ls-tab--active');
+                    renderLevelSelect(tab.dataset.category);
+                });
+                tab.dataset.wired = 'true';
+            }
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initTabs();
     renderLevelSelect('basics');
+    refreshCategoryTabs();
 });
 
 // sign out button

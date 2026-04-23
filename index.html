@@ -16,6 +16,7 @@
 
 <body>
 
+    <!-- level select screen -->
     <div id="levelSelectScreen" class="ls-screen">
 
         <div class="ls-bg-grid" aria-hidden="true"></div>
@@ -71,7 +72,6 @@
                 </button>
             </nav>
 
-            <!-- level card grid — populated by renderLevelSelect() -->
             <main class="ls-grid" id="levelGrid" role="list" aria-label="Available levels">
                 <div class="ls-skeleton" aria-hidden="true"></div>
                 <div class="ls-skeleton" aria-hidden="true" style="animation-delay:.1s"></div>
@@ -96,10 +96,10 @@
     </div>
 
 
-    <!-- main game UI — hidden until the player picks a level -->
+    <!-- game screen - hidden until a level is selected -->
     <div class="container hidden" id="gameContainer">
 
-        <!-- level objective banner — populated by launchLevel() -->
+        <!-- objective banner - populated by launchLevel() -->
         <div class="objective-banner" id="objectiveBanner">
             <div class="objective-banner-inner">
                 <span class="objective-label">🎯 Objective</span>
@@ -116,26 +116,30 @@
                     <h2>Block Programming</h2>
                 </div>
 
+                <!-- blocklyDiv - toolbox defined below as static xml -->
                 <div id="blocklyDiv"></div>
 
                 <xml id="toolbox" style="display: none">
-                    <category name="Movement" colour="210">
+                    <category name="Movement" colour="160">
                         <block type="move_forward"></block>
+                        <block type="move_backward"></block>
                         <block type="turn_right"></block>
                         <block type="turn_left"></block>
                     </category>
-                    <category name="Logic" colour="120">
+                    <category name="Loops" colour="120">
                         <block type="controls_repeat_ext">
                             <value name="TIMES">
                                 <shadow type="math_number">
-                                    <field name="NUM">5</field>
+                                    <field name="NUM">3</field>
                                 </shadow>
                             </value>
                         </block>
                     </category>
+                    <category name="Sensors" colour="65">
+                        <block type="if_path_clear"></block>
+                    </category>
                 </xml>
 
-                <!-- run is primary full-width; reset and back share the row below -->
                 <button id="runButton" class="run-button">▶ Run Code</button>
                 <div class="game-btn-row">
                     <button id="resetButton" class="reset-button">↺ Reset</button>
@@ -168,7 +172,7 @@
     </div>
 
 
-    <!-- scripts — remember riyadh-- order matters!! -->
+    <!-- scripts - remember riyadh, order matters!! -->
     <script src="supabase.js"></script>
     <script src="robot.js"></script>
     <script src="app.js"></script>
