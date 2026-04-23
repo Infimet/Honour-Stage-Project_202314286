@@ -83,28 +83,52 @@ function updateFooterStats(progressRows) {
 }
 
 // hides level select and launches the chosen level
+// runs a brief full-screen transition between the two screens
+// builds anticipation and signals a clear context change (Mayer & Moreno 2003)
 function launchLevel(level) {
-    document.getElementById('levelSelectScreen').classList.add('hidden');
-    document.getElementById('gameContainer').classList.remove('hidden');
+    const transition   = document.getElementById('levelTransition');
+    const titleEl      = document.getElementById('transitionTitle');
+    const levelSelect  = document.getElementById('levelSelectScreen');
+    const gameContainer = document.getElementById('gameContainer');
 
-    // blockly measures its container at inject time - if gameContainer was hidden,
-    // the workspace dimensions are zero and it renders broken. force a recalculation
-    // now that the container is visible. (workspace is declared as var in app.js)
-    if (typeof workspace !== 'undefined' && workspace) Blockly.svgResize(workspace);
+    // set the level title in the transition screen before showing it
+    titleEl.textContent = level.title ?? '';
 
-    // update toolbox to match this level's category - progressive disclosure
-    // (Sweller 1988: don't show blocks the student hasn't been introduced to yet)
-    if (typeof updateToolboxForCategory === 'function') {
-        updateToolboxForCategory(level.category);
-    }
+    // phase 1: fade in the transition overlay (0.25s)
+    transition.classList.remove('hidden', 'leaving');
+    transition.classList.add('entering');
 
-    // populate the objective banner
-    if (typeof updateObjectiveBanner === 'function') {
-        updateObjectiveBanner(level);
-    }
+    // phase 2: after overlay is fully visible, prepare the game screen behind it
+    setTimeout(() => {
+        transition.classList.remove('entering');
 
-    window.robotInstance.loadLevelFromDb(level);
-    window.activeLevel = level;
+        levelSelect.classList.add('hidden');
+        gameContainer.classList.remove('hidden');
+
+        // clear any blocks left over from a previous level session
+        if (typeof workspace !== 'undefined' && workspace) workspace.clear();
+
+        // blockly resize fix - container was hidden so workspace has zero dimensions
+        if (typeof workspace !== 'undefined' && workspace) Blockly.svgResize(workspace);
+
+        if (typeof updateToolboxForCategory === 'function') updateToolboxForCategory(level.category);
+        if (typeof updateObjectiveBanner    === 'function') updateObjectiveBanner(level);
+
+        window.robotInstance.loadLevelFromDb(level);
+        window.activeLevel = level;
+
+    }, 300);
+
+    // phase 3: hold for child to read the level title, then fade out (total ~1.2s)
+    setTimeout(() => {
+        transition.classList.add('leaving');
+
+        transition.addEventListener('animationend', () => {
+            transition.classList.add('hidden');
+            transition.classList.remove('leaving');
+        }, { once: true });
+
+    }, 900);
 }
 
 // wire up category tab buttons

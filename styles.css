@@ -454,6 +454,12 @@ body {
     overflow: hidden;
 }
 
+/* hide the trash can block-count badge - adds no pedagogical value
+   and is visual noise for children (Sweller 1988: extraneous cognitive load) */
+.blocklyTrashcanCount {
+    display: none !important;
+}
+
 #robotCanvas {
     border: 2px solid var(--colour-border);
     background-color: var(--colour-white);
@@ -461,22 +467,25 @@ body {
     max-width: 100%;
 }
 
-/* canvas flash overlay - brief dark pulse on each Run Code press
-   signals "starting over" using a respawn mechanic children recognise from games
-   (Mayer & Moreno 2003 signaling principle; Gapsy Studio 2026 reset framing) */
+/* canvas flash overlay - slow fade to black then back, with a hold at peak
+   triggered on failure only - signals "clean slate, let's try again"
+   inspired by bowling alley pin reset: the lane goes dark before the pins return
+   reserving it for failure makes it meaningful (Mayer & Moreno 2003 signaling principle)
+   children understand this convention from games - it means "starting over" */
 .canvas-flash {
     position: absolute;
     inset: 0;
-    background: var(--colour-text);
+    background: #1A1A2E;
     border-radius: var(--radius-md);
     pointer-events: none;
     z-index: 10;
-    animation: canvas-flash 0.35s ease-out forwards;
+    animation: canvas-flash 3.2s ease forwards;
 }
 
 @keyframes canvas-flash {
     0%   { opacity: 0; }
-    25%  { opacity: 0.55; }
+    18%  { opacity: 0.92; }
+    72%  { opacity: 0.92; }
     100% { opacity: 0; }
 }
 
@@ -583,6 +592,40 @@ body {
 }
 
 
+/* try-again toast - shown over the canvas during the flash reset
+   warm, playful, non-punitive language (Gapsy Studio 2026)
+   positioned centrally so it's the first thing the child sees on reset */
+.try-again-toast {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.15);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(4px);
+    border-radius: var(--radius-lg);
+    padding: 16px 28px;
+    text-align: center;
+    pointer-events: none;
+    z-index: 11;
+    animation: toast-pop 3.2s ease forwards;
+}
+
+.try-again-toast-text {
+    font-family: var(--font-main);
+    font-size: 18px;
+    font-weight: 800;
+    color: white;
+    display: block;
+}
+
+@keyframes toast-pop {
+    0%   { opacity: 0; transform: translate(-50%, -48%); }
+    18%  { opacity: 1; transform: translate(-50%, -50%); }
+    72%  { opacity: 1; transform: translate(-50%, -50%); }
+    100% { opacity: 0; transform: translate(-50%, -52%); }
+}
+
 /* --- error / no-win feedback banner ---
    amber not red - reserve red for critical errors only
    non-punitive framing: "not quite" not "wrong" (Gapsy Studio 2026) */
@@ -604,6 +647,107 @@ body {
     from { opacity: 0; transform: translateY(-6px); }
     to   { opacity: 1; transform: translateY(0); }
 }
+
+/* --- level launch transition overlay ---
+   brief artificial loading moment between level select and game screen
+   builds anticipation and signals a clear context change
+   (Mayer & Moreno 2003 segmentation principle: transitions help children
+   understand they have moved into a distinct new space; Gapsy Studio 2026:
+   children expect a level intro before play begins from prior game experience) */
+
+.level-transition {
+    position: fixed;
+    inset: 0;
+    background: var(--colour-text);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.level-transition.hidden {
+    display: none !important;
+}
+
+.level-transition.entering {
+    animation: lt-fade-in 0.25s ease forwards;
+}
+
+.level-transition.leaving {
+    animation: lt-fade-out 0.3s ease forwards;
+}
+
+@keyframes lt-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes lt-fade-out {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+}
+
+.level-transition-inner {
+    text-align: center;
+    animation: lt-content-rise 0.35s ease both;
+    animation-delay: 0.1s;
+}
+
+@keyframes lt-content-rise {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.level-transition-label {
+    font-family: var(--font-main);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: rgba(255, 255, 255, 0.5);
+    margin-bottom: 10px;
+}
+
+/* 2.2rem sits within the 28-36px research range for level-title text */
+.level-transition-title {
+    font-family: var(--font-main);
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--colour-white);
+    margin-bottom: 32px;
+    letter-spacing: -0.02em;
+}
+
+/* three-dot bounce loader - universally understood loading signal for children */
+.level-transition-dots {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.level-transition-dots span {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--colour-green);
+    animation: lt-dot-bounce 0.9s ease-in-out infinite;
+}
+
+.level-transition-dots span:nth-child(2) {
+    animation-delay: 0.15s;
+    background: var(--colour-blue);
+}
+
+.level-transition-dots span:nth-child(3) {
+    animation-delay: 0.3s;
+    background: var(--colour-amber);
+}
+
+@keyframes lt-dot-bounce {
+    0%, 100% { transform: translateY(0);     opacity: 0.5; }
+    50%       { transform: translateY(-12px); opacity: 1;   }
+}
+
 
 .modal {
     position: fixed;
@@ -699,6 +843,28 @@ body {
 /* modal buttons - run-button style inherited, reset-button for back */
 .modal-content .run-button {
     margin-top: 0;
+}
+
+/* retry sits between next level and back to menu - amber to distinguish it
+   from the primary action (next level) and the neutral action (back to menu) */
+.retry-button {
+    display: block;
+    width: 100%;
+    padding: 11px 20px;
+    margin-top: 10px;
+    font-family: var(--font-main);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--colour-text);
+    background-color: var(--colour-green-lt);
+    border: 2px solid var(--colour-green);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: background-color 0.18s ease;
+}
+
+.retry-button:hover {
+    background-color: #d0ecdc;
 }
 
 .modal-content .reset-button {

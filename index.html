@@ -159,6 +159,19 @@
     </div>
 
 
+    <!-- level launch transition overlay -->
+    <div id="levelTransition" class="level-transition hidden" aria-hidden="true">
+        <div class="level-transition-inner">
+            <p class="level-transition-label">Get Ready</p>
+            <h2 class="level-transition-title" id="transitionTitle"></h2>
+            <div class="level-transition-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </div>
+
     <!-- win modal -->
     <div id="winModal" class="modal hidden">
         <div class="modal-content">
@@ -167,12 +180,13 @@
             <p>Great job! You programmed the robot to reach the target.</p>
             <div id="winStars" class="win-stars"></div>
             <button id="nextLevelBtn" class="run-button">Next Level →</button>
+            <button id="retryBtn" class="retry-button">Try Again</button>
             <button id="backToMenuBtn" class="reset-button" style="margin-top:8px">Back to Menu</button>
         </div>
     </div>
 
 
-    <!-- scripts - remember riyadh, order matters!! -->
+    <!-- scripts - order matters -->
     <script src="supabase.js"></script>
     <script src="robot.js"></script>
     <script src="app.js"></script>

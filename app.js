@@ -180,83 +180,112 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('runButton').addEventListener('click', runCode);
     document.getElementById('resetButton').addEventListener('click', resetApp);
     document.getElementById('nextLevelBtn').addEventListener('click', nextLevel);
+    document.getElementById('retryBtn').addEventListener('click', retryLevel);
     document.getElementById('backToMenuBtn').addEventListener('click', returnToLevelSelect);
     document.getElementById('backButton').addEventListener('click', returnToLevelSelect);
 });
 
-// brief canvas flash before each run - signals "starting over" to the student
-// children understand respawn mechanics from games (LBP, Mario etc.)
-// reframes every retry as a fresh attempt, not a failure (Gapsy Studio 2026)
-// signaling principle: visual cue communicates the state change clearly (Mayer & Moreno 2003)
-function flashCanvas() {
-    return new Promise(resolve => {
-        const canvasWrapper = document.getElementById('robotCanvas').parentElement;
-        canvasWrapper.style.position = 'relative';
+// canvas flash + try-again toast - triggered on failure only, not every run
+// reserving it for failure makes it a meaningful signal (Mayer & Moreno 2003)
+// the slow fade to black then back is inspired by bowling alley pin resets:
+// the lane goes dark, then the pins return fresh - children understand this
+// as "clean slate, have another go" (Gapsy Studio 2026)
+function flashAndReset(onDone) {
+    const canvasWrapper = document.getElementById('robotCanvas').parentElement;
+    canvasWrapper.style.position = 'relative';
 
-        const flash = document.createElement('div');
-        flash.className = 'canvas-flash';
-        canvasWrapper.appendChild(flash);
+    // flash overlay
+    const flash = document.createElement('div');
+    flash.className = 'canvas-flash';
+    canvasWrapper.appendChild(flash);
 
-        flash.addEventListener('animationend', () => {
-            flash.remove();
-            resolve();
-        });
+    // toast message shown over the dark canvas
+    const toast = document.createElement('div');
+    toast.className = 'try-again-toast';
+    toast.innerHTML = `
+        <span class="try-again-toast-text">Let's try that again!</span>
+    `;
+    canvasWrapper.appendChild(toast);
+
+    // reset the robot at the midpoint when the canvas is fully dark
+    // so the student sees it return to start, not snap mid-fade
+    setTimeout(() => {
+        window.robotInstance.reset();
+    }, 576); // 18% of 3200ms - peak opacity point
+
+    // clean up both elements after the animation
+    flash.addEventListener('animationend', () => {
+        flash.remove();
+        toast.remove();
+        if (onDone) onDone();
     });
 }
 
 // --- execution logic ---
-// every run first resets the robot to the start position (blocks are kept)
-// this is the Lightbot/Code.org standard - student focuses on the code,
-// not on tracking where the robot ended up (Sweller 1988: reduce extraneous load)
+// runs code immediately with no flash - flash is reserved for failure only
+// (Sweller 1988: reduce extraneous load - routine actions should be invisible)
 function runCode() {
     const runBtn = document.getElementById('runButton');
     runBtn.disabled = true;
 
-    // flash → reset → execute, in that order
-    flashCanvas().then(() => {
-        window.robotInstance.reset();
-        hideErrorBanner();
-        _lastBlockId = null;
+    hideErrorBanner();
+    _lastBlockId = null;
 
-        const code = javascript.javascriptGenerator.workspaceToCode(workspace);
+    // reset silently before each run - student focuses on the code,
+    // not on tracking where the robot ended up (Lightbot/Code.org standard)
+    window.robotInstance.reset();
 
-        const onComplete = async () => {
-            runBtn.disabled = false;
+    const code = javascript.javascriptGenerator.workspaceToCode(workspace);
 
-            if (window.robotInstance.checkWin()) {
-                const blocksUsed = workspace.getAllBlocks(false).length;
-                const optimal    = window.activeLevel?.optimal_block_count ?? blocksUsed;
-                const stars      = calculateStars(blocksUsed, optimal);
+    const onComplete = async () => {
+        runBtn.disabled = false;
 
-                if (window.activeLevel) await saveProgress(window.activeLevel.id, stars);
-                showWinStars(stars);
-                document.getElementById('winModal').classList.remove('hidden');
-            } else {
-                // ran but didn't reach target - gentle non-punitive nudge
-                // low-stakes framing encourages re-attempt (Gapsy Studio 2026; ERIC EJ1154629)
-                showErrorBanner("Hmm, not quite! Check your blocks and try again. 🤔");
-            }
-        };
+        if (window.robotInstance.checkWin()) {
+            // filter out shadow blocks (e.g. the grey number input inside repeat)
+            // getAllBlocks counts them but they are not user-placed blocks
+            const blocksUsed = workspace.getAllBlocks(false).filter(b => !b.isShadow()).length;
+            const optimal    = window.activeLevel?.optimal_block_count ?? blocksUsed;
+            const stars      = calculateStars(blocksUsed, optimal);
 
-        // set callback before eval - rAF is async so it cannot fire before eval returns
-        window.robotInstance.onQueueComplete = onComplete;
+            if (window.activeLevel) await saveProgress(window.activeLevel.id, stars);
+            showWinStars(stars);
 
-        try {
-            eval(code);
+            // blockly appends floating widget divs (number inputs, dropdowns)
+            // directly to document.body with very high z-index - they escape the
+            // modal overlay and render on top of it. hide them before showing modal.
+            try { Blockly.WidgetDiv.hide(); } catch (e) {}
+            try { Blockly.dropDownDiv.hide(); } catch (e) {}
 
-            // edge case: empty workspace produces no commands, so queue never drains
-            if (!window.robotInstance.isAnimating && window.robotInstance.commandQueue.length === 0) {
-                window.robotInstance.onQueueComplete = null;
-                onComplete();
-            }
-        } catch (e) {
-            window.robotInstance.onQueueComplete = null;
-            runBtn.disabled = false;
-            console.error('execution error:', e);
-            if (_lastBlockId) workspace.highlightBlock(_lastBlockId);
-            showErrorBanner('Something went wrong. Try resetting and building again.');
+            document.getElementById('winModal').classList.remove('hidden');
+        } else {
+            // pause so the student can see where the robot ended up before the reset
+            // this is the moment of understanding - seeing the final position
+            // is what tells them what went wrong (Hattie 2009: immediate feedback
+            // must be legible, not just fast)
+            setTimeout(() => {
+                flashAndReset(() => {
+                    showErrorBanner("Hmm, not quite! Check your blocks and try again. 🤔");
+                });
+            }, 1200);
         }
-    });
+    };
+
+    window.robotInstance.onQueueComplete = onComplete;
+
+    try {
+        eval(code);
+
+        if (!window.robotInstance.isAnimating && window.robotInstance.commandQueue.length === 0) {
+            window.robotInstance.onQueueComplete = null;
+            onComplete();
+        }
+    } catch (e) {
+        window.robotInstance.onQueueComplete = null;
+        runBtn.disabled = false;
+        console.error('execution error:', e);
+        if (_lastBlockId) workspace.highlightBlock(_lastBlockId);
+        showErrorBanner('Something went wrong. Try resetting and building again.');
+    }
 }
 
 // shows a non-punitive inline error banner beneath the objective banner
@@ -283,6 +312,15 @@ function hideErrorBanner() {
 }
 
 function resetApp() {
+    hideErrorBanner();
+    window.robotInstance.reset();
+}
+
+// closes the win modal and resets the robot so the student can iterate on their solution
+// blocks are intentionally preserved - if a child got 2 stars they need to see
+// what they coded in order to think about how to improve it (Gapsy Studio 2026)
+function retryLevel() {
+    document.getElementById('winModal').classList.add('hidden');
     hideErrorBanner();
     window.robotInstance.reset();
 }
