@@ -1,379 +1,388 @@
-// main application logic (phase 2 + sprint 5 animation + sprint 6 blocks + walls)
+// robot state & canvas management (sprint 3 + animation queue sprint 5 + walls sprint 6)
 
-// --- toolbox definitions per category ---
-// progressive disclosure: each category reveals only the blocks students need
-// (Sweller 1988 - cognitive load theory: don't show complexity before it's relevant)
+class Robot {
+    constructor(canvas) {
+        this.canvas = canvas;
+        this.ctx = canvas.getContext('2d');
+        this.activeLevel = null;
 
-const TOOLBOX_BASICS = `<xml>
-    <category name="Movement" colour="210">
-        <block type="move_forward"></block>
-        <block type="turn_right"></block>
-        <block type="turn_left"></block>
-    </category>
-</xml>`;
+        // animation queue state
+        this.commandQueue = [];
+        this.isAnimating = false;
+        this._animFrame = null;
+        this.onQueueComplete = null;
 
-const TOOLBOX_LOOPS = `<xml>
-    <category name="Movement" colour="210">
-        <block type="move_forward"></block>
-        <block type="move_backward"></block>
-        <block type="turn_right"></block>
-        <block type="turn_left"></block>
-    </category>
-    <category name="Loops" colour="120">
-        <block type="controls_repeat_ext">
-            <value name="TIMES">
-                <shadow type="math_number">
-                    <field name="NUM">3</field>
-                </shadow>
-            </value>
-        </block>
-    </category>
-</xml>`;
+        // logical state: tracks where robot WILL be after all queued commands
+        // (separate from visual x/y/angle which lag behind during animation)
+        this._lx = 0;
+        this._ly = 0;
+        this._lAngle = 0;
 
-// obstacles uses same blocks as loops - conditionals not yet introduced
-const TOOLBOX_OBSTACLES = TOOLBOX_LOOPS;
+        // wall data - array of {x, y} pixel positions of blocked grid squares
+        this.walls = [];
 
-const TOOLBOX_CONDITIONALS = `<xml>
-    <category name="Movement" colour="210">
-        <block type="move_forward"></block>
-        <block type="move_backward"></block>
-        <block type="turn_right"></block>
-        <block type="turn_left"></block>
-    </category>
-    <category name="Loops" colour="120">
-        <block type="controls_repeat_ext">
-            <value name="TIMES">
-                <shadow type="math_number">
-                    <field name="NUM">3</field>
-                </shadow>
-            </value>
-        </block>
-    </category>
-    <category name="Sensors" colour="65">
-        <block type="if_path_clear"></block>
-    </category>
-</xml>`;
-
-const CATEGORY_TOOLBOXES = {
-    basics:       TOOLBOX_BASICS,
-    loops:        TOOLBOX_LOOPS,
-    obstacles:    TOOLBOX_OBSTACLES,
-    conditionals: TOOLBOX_CONDITIONALS
-};
-
-// --- custom block definitions ---
-
-Blockly.Blocks['move_forward'] = {
-    init: function() {
-        this.appendDummyInput().appendField("Move Forward");
-        this.setPreviousStatement(true, null);
-        this.setNextStatement(true, null);
-        this.setColour(160);
-        this.setTooltip("Moves the robot one step forward");
-    }
-};
-
-Blockly.Blocks['move_backward'] = {
-    init: function() {
-        this.appendDummyInput().appendField("Move Backward");
-        this.setPreviousStatement(true, null);
-        this.setNextStatement(true, null);
-        this.setColour(160);
-        this.setTooltip("Moves the robot one step backward");
-    }
-};
-
-Blockly.Blocks['turn_right'] = {
-    init: function() {
-        this.appendDummyInput().appendField("Turn Right ↻");
-        this.setPreviousStatement(true, null);
-        this.setNextStatement(true, null);
-        this.setColour(160);
-        this.setTooltip("Turns the robot 90 degrees right");
-    }
-};
-
-Blockly.Blocks['turn_left'] = {
-    init: function() {
-        this.appendDummyInput().appendField("Turn Left ↺");
-        this.setPreviousStatement(true, null);
-        this.setNextStatement(true, null);
-        this.setColour(160);
-        this.setTooltip("Turns the robot 90 degrees left");
-    }
-};
-
-// if_path_clear - checks robotInstance.isPathClear() before executing contained blocks
-// teaches conditional logic: programs can make decisions based on sensor input
-Blockly.Blocks['if_path_clear'] = {
-    init: function() {
-        this.appendDummyInput()
-            .appendField("🔍 If path is clear");
-        this.appendStatementInput('DO')
-            .setCheck(null)
-            .appendField("do");
-        this.setPreviousStatement(true, null);
-        this.setNextStatement(true, null);
-        this.setColour(65);
-        this.setTooltip("Only runs the blocks inside if the path ahead is clear");
-    }
-};
-
-// --- javascript code generators ---
-
-javascript.javascriptGenerator.forBlock['move_forward'] = function(block) {
-    return 'window.robotInstance.moveForward();\n';
-};
-
-javascript.javascriptGenerator.forBlock['move_backward'] = function(block) {
-    return 'window.robotInstance.moveBackward();\n';
-};
-
-javascript.javascriptGenerator.forBlock['turn_right'] = function(block) {
-    return 'window.robotInstance.turnRight();\n';
-};
-
-javascript.javascriptGenerator.forBlock['turn_left'] = function(block) {
-    return 'window.robotInstance.turnLeft();\n';
-};
-
-javascript.javascriptGenerator.forBlock['if_path_clear'] = function(block) {
-    const branch = javascript.javascriptGenerator.statementToCode(block, 'DO');
-    return `if (window.robotInstance.isPathClear()) {\n${branch}}\n`;
-};
-
-// --- block execution tracking ---
-// STATEMENT_PREFIX injects _trackBlock before every statement so we know
-// which block ran last - used to show amber highlight on error
-// (Gapsy Studio 2026: amber highlight guides without punishing)
-let _lastBlockId = null;
-
-function _trackBlock(id) {
-    _lastBlockId = id;
-}
-
-// --- initialise application ---
-
-var workspace = null;
-
-document.addEventListener('DOMContentLoaded', async function() {
-    // bounce unauthenticated users back to the login page
-    const user = await getCurrentUser();
-    if (!user) {
-        window.location.href = 'login.html';
-        return;
+        this.reset();
     }
 
-    const canvas = document.getElementById('robotCanvas');
-    window.robotInstance = new Robot(canvas);
+    loadLevel(levelNumber) {
+        this.currentLevel = levelNumber;
+        this.reset();
+    }
 
-    // inject with basics toolbox by default - updated per level in launchLevel()
-    workspace = Blockly.inject('blocklyDiv', {
-        toolbox: TOOLBOX_BASICS,
-        scrollbars: false
-    });
+    loadLevelFromDb(levelData) {
+        this.activeLevel = levelData;
+        this.currentLevel = levelData.id;
+        this.walls = levelData.walls || [];
+        this.reset();
+    }
 
-    // inject block tracking before every statement
-    javascript.javascriptGenerator.STATEMENT_PREFIX = '_trackBlock(%1);\n';
-    javascript.javascriptGenerator.addReservedWords('_trackBlock');
+    reset() {
+        // cancel any in-flight animation before clearing state
+        if (this._animFrame) cancelAnimationFrame(this._animFrame);
+        this.commandQueue = [];
+        this.isAnimating = false;
+        this.onQueueComplete = null;
 
-    document.getElementById('runButton').addEventListener('click', runCode);
-    document.getElementById('resetButton').addEventListener('click', resetApp);
-    document.getElementById('nextLevelBtn').addEventListener('click', nextLevel);
-    document.getElementById('backToMenuBtn').addEventListener('click', returnToLevelSelect);
-    document.getElementById('backButton').addEventListener('click', returnToLevelSelect);
-});
+        this.x = this.canvas.width / 2;
+        this.y = this.canvas.height / 2;
+        this.angle = 270;
+        this.stepSize = 40;
+        this.trail = [{ x: this.x, y: this.y }];
 
-// brief canvas flash before each run - signals "starting over" to the student
-// children understand respawn mechanics from games (LBP, Mario etc.)
-// reframes every retry as a fresh attempt, not a failure (Gapsy Studio 2026)
-// signaling principle: visual cue communicates the state change clearly (Mayer & Moreno 2003)
-function flashCanvas() {
-    return new Promise(resolve => {
-        const canvasWrapper = document.getElementById('robotCanvas').parentElement;
-        canvasWrapper.style.position = 'relative';
+        // sync logical state to visual state on reset
+        this._lx = this.x;
+        this._ly = this.y;
+        this._lAngle = this.angle;
 
-        const flash = document.createElement('div');
-        flash.className = 'canvas-flash';
-        canvasWrapper.appendChild(flash);
+        // level manager: set target from db data or fallback defaults
+        if (this.activeLevel) {
+            this.target = { x: this.activeLevel.target_x, y: this.activeLevel.target_y };
+        } else if (this.currentLevel === 2) {
+            this.target = { x: this.x - 120, y: this.y + 80 };
+        } else {
+            this.target = { x: this.x + 80, y: this.y - 120 };
+        }
 
-        flash.addEventListener('animationend', () => {
-            flash.remove();
-            resolve();
+        this.draw();
+    }
+
+    draw() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        // draw order: grid -> walls -> target -> trail -> robot (back to front)
+        this.drawGrid();
+        this.drawWalls();
+        this.drawTarget();
+        this.drawTrail();
+        this.drawRobot();
+    }
+
+    drawGrid() {
+        this.ctx.strokeStyle = '#e0e0e0';
+        this.ctx.lineWidth = 1;
+
+        for (let x = 0; x <= this.canvas.width; x += 40) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, 0);
+            this.ctx.lineTo(x, this.canvas.height);
+            this.ctx.stroke();
+        }
+
+        for (let y = 0; y <= this.canvas.height; y += 40) {
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, y);
+            this.ctx.lineTo(this.canvas.width, y);
+            this.ctx.stroke();
+        }
+    }
+
+    // walls rendered as dark filled squares - visually distinct from the grid
+    drawWalls() {
+        if (!this.walls || this.walls.length === 0) return;
+
+        const half = this.stepSize / 2;
+        const inset = 2;
+
+        this.walls.forEach(wall => {
+            this.ctx.fillStyle = '#4A5568';
+            this.ctx.beginPath();
+            this.ctx.roundRect(
+                wall.x - half + inset,
+                wall.y - half + inset,
+                this.stepSize - inset * 2,
+                this.stepSize - inset * 2,
+                4
+            );
+            this.ctx.fill();
+
+            // subtle highlight on top edge
+            this.ctx.fillStyle = 'rgba(255,255,255,0.12)';
+            this.ctx.beginPath();
+            this.ctx.roundRect(
+                wall.x - half + inset,
+                wall.y - half + inset,
+                this.stepSize - inset * 2,
+                8,
+                [4, 4, 0, 0]
+            );
+            this.ctx.fill();
         });
-    });
-}
+    }
 
-// --- execution logic ---
-// every run first resets the robot to the start position (blocks are kept)
-// this is the Lightbot/Code.org standard - student focuses on the code,
-// not on tracking where the robot ended up (Sweller 1988: reduce extraneous load)
-function runCode() {
-    const runBtn = document.getElementById('runButton');
-    runBtn.disabled = true;
+    drawTarget() {
+        this.ctx.fillStyle = '#3DAA6E';
+        this.ctx.strokeStyle = '#2e8a57';
+        this.ctx.lineWidth = 2;
 
-    // flash → reset → execute, in that order
-    flashCanvas().then(() => {
-        window.robotInstance.reset();
-        hideErrorBanner();
-        _lastBlockId = null;
+        this.ctx.beginPath();
+        this.ctx.arc(this.target.x, this.target.y, 15, 0, 2 * Math.PI);
+        this.ctx.fill();
+        this.ctx.stroke();
 
-        const code = javascript.javascriptGenerator.workspaceToCode(workspace);
+        // small white centre dot - makes the target easier to spot
+        this.ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        this.ctx.beginPath();
+        this.ctx.arc(this.target.x, this.target.y, 4, 0, 2 * Math.PI);
+        this.ctx.fill();
+    }
 
-        const onComplete = async () => {
-            runBtn.disabled = false;
+    drawTrail() {
+        if (this.trail.length < 2) return;
 
-            if (window.robotInstance.checkWin()) {
-                const blocksUsed = workspace.getAllBlocks(false).length;
-                const optimal    = window.activeLevel?.optimal_block_count ?? blocksUsed;
-                const stars      = calculateStars(blocksUsed, optimal);
+        this.ctx.strokeStyle = '#4A90D9';
+        this.ctx.lineWidth = 3;
+        this.ctx.lineCap = 'round';
+        this.ctx.lineJoin = 'round';
 
-                if (window.activeLevel) await saveProgress(window.activeLevel.id, stars);
-                showWinStars(stars);
-                document.getElementById('winModal').classList.remove('hidden');
+        this.ctx.beginPath();
+        this.ctx.moveTo(this.trail[0].x, this.trail[0].y);
+
+        for (let i = 1; i < this.trail.length; i++) {
+            this.ctx.lineTo(this.trail[i].x, this.trail[i].y);
+        }
+
+        this.ctx.stroke();
+    }
+
+    drawRobot() {
+        this.ctx.save();
+        this.ctx.translate(this.x, this.y);
+        this.ctx.rotate((this.angle * Math.PI) / 180);
+
+        this.ctx.fillStyle = '#FF5722';
+        this.ctx.strokeStyle = '#D84315';
+        this.ctx.lineWidth = 2;
+
+        this.ctx.beginPath();
+        this.ctx.moveTo(15, 0);
+        this.ctx.lineTo(-10, -10);
+        this.ctx.lineTo(-10, 10);
+        this.ctx.closePath();
+        this.ctx.fill();
+        this.ctx.stroke();
+
+        this.ctx.fillStyle = 'white';
+        this.ctx.beginPath();
+        this.ctx.arc(8, 0, 3, 0, 2 * Math.PI);
+        this.ctx.fill();
+
+        this.ctx.restore();
+    }
+
+    moveForward() {
+        const rad = (this._lAngle * Math.PI) / 180;
+        const newX = this._lx + this.stepSize * Math.cos(rad);
+        const newY = this._ly + this.stepSize * Math.sin(rad);
+
+        const blocked = this._isBlocked(newX, newY);
+
+        if (!blocked) {
+            this._lx = newX;
+            this._ly = newY;
+            this._enqueue({ type: 'move', toX: newX, toY: newY });
+        } else {
+            this._enqueue({ type: 'wobble', rad });
+        }
+    }
+
+    moveBackward() {
+        const rad = (this._lAngle * Math.PI) / 180;
+        const newX = this._lx - this.stepSize * Math.cos(rad);
+        const newY = this._ly - this.stepSize * Math.sin(rad);
+
+        const blocked = this._isBlocked(newX, newY);
+
+        if (!blocked) {
+            this._lx = newX;
+            this._ly = newY;
+            this._enqueue({ type: 'move', toX: newX, toY: newY });
+        } else {
+            this._enqueue({ type: 'wobble', rad: rad + Math.PI });
+        }
+    }
+
+    turnLeft() {
+        this._lAngle = (this._lAngle - 90 + 360) % 360;
+        this._enqueue({ type: 'turn', toAngle: this._lAngle, delta: -90 });
+    }
+
+    turnRight() {
+        this._lAngle = (this._lAngle + 90) % 360;
+        this._enqueue({ type: 'turn', toAngle: this._lAngle, delta: 90 });
+    }
+
+    // returns true if the path directly ahead is clear
+    // used by the if_path_clear blockly block
+    // checks logical position so it respects already-queued moves
+    isPathClear() {
+        const rad = (this._lAngle * Math.PI) / 180;
+        const nextX = this._lx + this.stepSize * Math.cos(rad);
+        const nextY = this._ly + this.stepSize * Math.sin(rad);
+        return !this._isBlocked(nextX, nextY);
+    }
+
+    // shared boundary + wall check
+    _isBlocked(x, y) {
+        if (x < 20 || x > this.canvas.width - 20 ||
+            y < 20 || y > this.canvas.height - 20) {
+            return true;
+        }
+
+        if (this.walls && this.walls.length > 0) {
+            return this.walls.some(w =>
+                Math.abs(w.x - x) < 5 && Math.abs(w.y - y) < 5
+            );
+        }
+
+        return false;
+    }
+
+    checkWin() {
+        const distance = Math.sqrt(
+            Math.pow(this.x - this.target.x, 2) +
+            Math.pow(this.y - this.target.y, 2)
+        );
+
+        console.log(`robot at X:${this.x.toFixed(1)}, Y:${this.y.toFixed(1)}`);
+        console.log(`target at X:${this.target.x}, Y:${this.target.y}`);
+        console.log(`distance: ${distance.toFixed(2)}px`);
+
+        return distance < 10;
+    }
+
+    // --- animation queue engine ---
+
+    _enqueue(command) {
+        this.commandQueue.push(command);
+        if (!this.isAnimating) this._processQueue();
+    }
+
+    _processQueue() {
+        if (this.commandQueue.length === 0) {
+            this.isAnimating = false;
+            if (this.onQueueComplete) {
+                const cb = this.onQueueComplete;
+                this.onQueueComplete = null;
+                cb();
+            }
+            return;
+        }
+
+        this.isAnimating = true;
+        const command = this.commandQueue.shift();
+        this._runAnimation(command, () => this._processQueue());
+    }
+
+    _runAnimation(command, onDone) {
+        // 400ms per cell - within the 350-450ms UX research range (Gouws et al. 2013)
+        // 200ms per turn - snappy but visible
+        const MOVE_MS = 400;
+        const TURN_MS = 200;
+
+        if (command.type === 'wobble') {
+            this._runWobble(command, onDone);
+            return;
+        }
+
+        const duration  = command.type === 'move' ? MOVE_MS : TURN_MS;
+        const startTime = performance.now();
+        const fromX     = this.x;
+        const fromY     = this.y;
+        const fromAngle = this.angle;
+
+        const step = (now) => {
+            const t    = Math.min((now - startTime) / duration, 1);
+            const ease = this._easeInOut(t);
+
+            if (command.type === 'move') {
+                this.x = fromX + (command.toX - fromX) * ease;
+                this.y = fromY + (command.toY - fromY) * ease;
             } else {
-                // ran but didn't reach target - gentle non-punitive nudge
-                // low-stakes framing encourages re-attempt (Gapsy Studio 2026; ERIC EJ1154629)
-                showErrorBanner("Hmm, not quite! Check your blocks and try again. 🤔");
+                // interpolate using delta to avoid wrap-around issues at 0/360 boundary
+                this.angle = fromAngle + command.delta * ease;
+            }
+
+            this.draw();
+
+            if (t < 1) {
+                this._animFrame = requestAnimationFrame(step);
+            } else {
+                if (command.type === 'move') {
+                    this.x = command.toX;
+                    this.y = command.toY;
+                    this.trail.push({ x: this.x, y: this.y });
+                } else {
+                    this.angle = command.toAngle;
+                }
+                this.draw();
+                onDone();
             }
         };
 
-        // set callback before eval - rAF is async so it cannot fire before eval returns
-        window.robotInstance.onQueueComplete = onComplete;
+        this._animFrame = requestAnimationFrame(step);
+    }
 
-        try {
-            eval(code);
+    // gentle nudge in the attempted direction - non-punitive boundary/wall feedback
+    // "mistakes should never feel like failure" (Gapsy Studio 2026)
+    _runWobble(command, onDone) {
+        const WOBBLE_MS   = 320;
+        const WOBBLE_DIST = 10;
+        const startTime   = performance.now();
+        const fromX       = this.x;
+        const fromY       = this.y;
+        const nudgeX      = Math.cos(command.rad) * WOBBLE_DIST;
+        const nudgeY      = Math.sin(command.rad) * WOBBLE_DIST;
 
-            // edge case: empty workspace produces no commands, so queue never drains
-            if (!window.robotInstance.isAnimating && window.robotInstance.commandQueue.length === 0) {
-                window.robotInstance.onQueueComplete = null;
-                onComplete();
+        const step = (now) => {
+            const t = Math.min((now - startTime) / WOBBLE_MS, 1);
+            const offset = Math.sin(t * Math.PI) * (1 - t * 0.5);
+
+            this.x = fromX + nudgeX * offset;
+            this.y = fromY + nudgeY * offset;
+            this.draw();
+
+            if (t < 1) {
+                this._animFrame = requestAnimationFrame(step);
+            } else {
+                this.x = fromX;
+                this.y = fromY;
+                this.draw();
+                onDone();
             }
-        } catch (e) {
-            window.robotInstance.onQueueComplete = null;
-            runBtn.disabled = false;
-            console.error('execution error:', e);
-            if (_lastBlockId) workspace.highlightBlock(_lastBlockId);
-            showErrorBanner('Something went wrong. Try resetting and building again.');
-        }
-    });
-}
+        };
 
-// shows a non-punitive inline error banner beneath the objective banner
-// replaces the browser alert() - avoids harsh fail signals (Gapsy Studio 2026)
-function showErrorBanner(message) {
-    let banner = document.getElementById('errorBanner');
-    if (!banner) {
-        banner = document.createElement('div');
-        banner.id = 'errorBanner';
-        banner.className = 'error-banner';
-        const objective = document.getElementById('objectiveBanner');
-        objective.insertAdjacentElement('afterend', banner);
+        this._animFrame = requestAnimationFrame(step);
     }
-    banner.textContent = message;
-    banner.classList.remove('hidden');
-}
 
-function hideErrorBanner() {
-    const banner = document.getElementById('errorBanner');
-    if (banner) banner.classList.add('hidden');
-    // clear amber block highlight alongside the banner
-    if (workspace) workspace.highlightBlock(null);
-    _lastBlockId = null;
-}
-
-function resetApp() {
-    hideErrorBanner();
-    window.robotInstance.reset();
-}
-
-// --- level navigation ---
-
-let currentLevel = 1;
-
-function nextLevel() {
-    document.getElementById('winModal').classList.add('hidden');
-    workspace.clear();
-    hideErrorBanner();
-
-    const currentIndex = currentCategoryLevels.findIndex(l => l.id === window.activeLevel?.id);
-    const next = currentCategoryLevels[currentIndex + 1];
-
-    if (next) {
-        window.robotInstance.loadLevelFromDb(next);
-        window.activeLevel = next;
-        updateObjectiveBanner(next);
-        updateToolboxForCategory(next.category);
-    } else {
-        returnToLevelSelect();
+    _easeInOut(t) {
+        return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
     }
 }
 
-function returnToLevelSelect() {
-    document.getElementById('winModal').classList.add('hidden');
-    document.getElementById('gameContainer').classList.add('hidden');
-    document.getElementById('levelSelectScreen').classList.remove('hidden');
+// global functions for blockly to call
+let robotInstance = null;
 
-    const activeTab = document.querySelector('#lsTabs .ls-tab--active');
-    if (activeTab) renderLevelSelect(activeTab.dataset.category);
-
-    // re-check category unlocks in case the student just completed a category
-    if (typeof refreshCategoryTabs === 'function') refreshCategoryTabs();
-}
-
-// updates the in-game objective banner text
-function updateObjectiveBanner(level) {
-    document.getElementById('objectiveTitle').textContent = level.title ?? '';
-    document.getElementById('objectiveDesc').textContent  = level.description ?? '';
-}
-
-// updates the blockly toolbox to match the level's category
-// called from launchLevel (level_select.js) and nextLevel (app.js)
-function updateToolboxForCategory(category) {
-    const toolboxXml = CATEGORY_TOOLBOXES[category] || TOOLBOX_BASICS;
-    if (workspace) {
-        const parser = new DOMParser();
-        const dom = parser.parseFromString(toolboxXml, 'text/xml').documentElement;
-        workspace.updateToolbox(dom);
-    }
-}
-
-// --- win modal ---
-
-// renders star icons with sequential pop-in animation
-// 150ms gap between stars (Gelman 2014: each star should feel like a distinct achievement)
-function showWinStars(stars) {
-    const container = document.getElementById('winStars');
-    container.innerHTML = [1, 2, 3]
-        .map(n => `<span class="win-star ${n <= stars ? 'win-star--earned' : ''}">★</span>`)
-        .join('');
-
-    const starEls = container.querySelectorAll('.win-star');
-    starEls.forEach((el, i) => {
-        setTimeout(() => el.classList.add('win-star--animate'), i * 150);
-    });
-
-    setTimeout(() => spawnConfetti(), stars * 150 + 100);
-}
-
-// brief confetti burst inside the modal - pure js/css, no library needed
-// multimodal reward signal (Gapsy Studio 2026; Khan Academy Kids session data)
-function spawnConfetti() {
-    const modal   = document.querySelector('.modal-content');
-    const colours = ['#3DAA6E', '#4A90D9', '#F5A623', '#E53935', '#9B59B6'];
-    const count   = 28;
-
-    for (let i = 0; i < count; i++) {
-        const el = document.createElement('div');
-        el.className = 'confetti-particle';
-        el.style.left              = Math.random() * 100 + '%';
-        el.style.top               = Math.random() * 40  + '%';
-        el.style.backgroundColor   = colours[Math.floor(Math.random() * colours.length)];
-        el.style.animationDelay    = Math.random() * 0.3 + 's';
-        el.style.animationDuration = (0.9 + Math.random() * 0.6) + 's';
-        el.style.transform         = `rotate(${Math.random() * 360}deg)`;
-        modal.appendChild(el);
-
-        el.addEventListener('animationend', () => el.remove());
-    }
-}
+function moveForward()  { if (robotInstance) robotInstance.moveForward();  }
+function moveBackward() { if (robotInstance) robotInstance.moveBackward(); }
+function turnLeft()     { if (robotInstance) robotInstance.turnLeft();     }
+function turnRight()    { if (robotInstance) robotInstance.turnRight();    }

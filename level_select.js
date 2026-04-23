@@ -139,6 +139,10 @@ async function refreshCategoryTabs() {
             tab.disabled = false;
             tab.classList.remove('ls-tab--locked');
 
+            // remove the padlock icon - it was part of the locked state markup
+            const lockIcon = tab.querySelector('.ls-tab-lock');
+            if (lockIcon) lockIcon.remove();
+
             // wire up click handler if not already done
             if (!tab.dataset.wired) {
                 tab.addEventListener('click', () => {
