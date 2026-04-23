@@ -41,6 +41,7 @@ function buildLevelCard(level, progress, isLocked) {
 async function renderLevelSelect(category = 'basics') {
     const grid = document.getElementById('levelGrid');
     grid.innerHTML = '';
+    grid.dataset.activeCategory = category;
 
     const [levels, progressRows] = await Promise.all([
         fetchLevelsByCategory(category),
@@ -184,7 +185,33 @@ document.addEventListener('DOMContentLoaded', () => {
     initTabs();
     renderLevelSelect('basics');
     refreshCategoryTabs();
+    populateGreeting();
+    populateCategoryProgress();
 });
+
+// sets the personalised greeting based on time of day and student name
+async function populateGreeting() {
+    const name = await fetchDisplayName();
+    const hour = new Date().getHours();
+    const timeOfDay = hour < 12 ? 'Good morning'
+                    : hour < 18 ? 'Good afternoon'
+                    : 'Good evening';
+
+    const el = document.getElementById('lsGreeting');
+    if (el && name) el.textContent = `${timeOfDay}, ${name}!`;
+}
+
+// fetches and displays per-category progress counts inside each tab
+async function populateCategoryProgress() {
+    const progress = await fetchCategoryProgress();
+
+    Object.entries(progress).forEach(([category, { total, completed }]) => {
+        const el = document.getElementById(`progress-${category}`);
+        if (!el) return;
+        el.textContent = `${completed}/${total}`;
+        if (completed === total && total > 0) el.classList.add('ls-tab-progress--done');
+    });
+}
 
 // sign out button
 document.getElementById('signOutBtn').addEventListener('click', async () => {

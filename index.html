@@ -34,41 +34,52 @@
                 <button id="signOutBtn" class="sign-out-btn">Sign Out</button>
             </header>
 
-            <div class="ls-section-header">
-                <h1 class="ls-section-title">Choose a Level</h1>
+            <!-- personalised greeting - populated by level_select.js on load -->
+            <div class="ls-greeting">
+                <h1 class="ls-greeting-text" id="lsGreeting">Welcome back!</h1>
                 <p class="ls-section-sub">Complete each category to unlock the next one.</p>
             </div>
+
+            <h2 class="ls-category-heading">Choose a Level</h2>
 
             <nav class="ls-tabs" id="lsTabs" role="tablist" aria-label="Level categories">
                 <button class="ls-tab ls-tab--active"
                         role="tab" aria-selected="true"
-                        data-category="basics">
+                        data-category="basics"
+                        data-colour="green">
                     <span class="ls-tab-icon">🚀</span>
                     <span class="ls-tab-label">Movement Basics</span>
+                    <span class="ls-tab-progress" id="progress-basics"></span>
                 </button>
                 <button class="ls-tab ls-tab--locked"
                         role="tab" aria-selected="false"
-                        data-category="loops" disabled
+                        data-category="loops"
+                        data-colour="blue" disabled
                         title="Complete Movement Basics to unlock">
                     <span class="ls-tab-icon">🔁</span>
                     <span class="ls-tab-label">Loops</span>
                     <span class="ls-tab-lock" aria-label="locked">🔒</span>
+                    <span class="ls-tab-progress" id="progress-loops"></span>
                 </button>
                 <button class="ls-tab ls-tab--locked"
                         role="tab" aria-selected="false"
-                        data-category="obstacles" disabled
+                        data-category="obstacles"
+                        data-colour="amber" disabled
                         title="Complete Loops to unlock">
                     <span class="ls-tab-icon">🧱</span>
                     <span class="ls-tab-label">Obstacles</span>
                     <span class="ls-tab-lock" aria-label="locked">🔒</span>
+                    <span class="ls-tab-progress" id="progress-obstacles"></span>
                 </button>
                 <button class="ls-tab ls-tab--locked"
                         role="tab" aria-selected="false"
-                        data-category="conditionals" disabled
+                        data-category="conditionals"
+                        data-colour="purple" disabled
                         title="Complete Obstacles to unlock">
                     <span class="ls-tab-icon">🔀</span>
                     <span class="ls-tab-label">Conditionals</span>
                     <span class="ls-tab-lock" aria-label="locked">🔒</span>
+                    <span class="ls-tab-progress" id="progress-conditionals"></span>
                 </button>
             </nav>
 

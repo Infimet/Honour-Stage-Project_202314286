@@ -107,6 +107,13 @@ body {
 .ls-logo-icon {
     font-size: 2rem;
     line-height: 1;
+    display: inline-block;
+    animation: robot-bob 2.8s ease-in-out infinite;
+}
+
+@keyframes robot-bob {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-5px); }
 }
 
 .ls-logo-text {
@@ -123,23 +130,72 @@ body {
     padding-left: 50px;
 }
 
-/* --- section title --- */
+/* --- personalised greeting --- */
 
-.ls-section-header {
-    margin-bottom: 20px;
+.ls-greeting {
+    margin-bottom: 24px;
 }
 
-.ls-section-title {
-    font-size: 1.5rem;
+/* large warm greeting - Nunito 800 at 1.8rem (within the 28-36px instruction range) */
+.ls-greeting-text {
+    font-size: 1.8rem;
     font-weight: 800;
     color: var(--colour-text);
     margin-bottom: 4px;
+    letter-spacing: -0.02em;
 }
 
-.ls-section-sub {
-    font-size: 15px;
-    font-weight: 600;
+/* choose a level heading above the tabs */
+.ls-category-heading {
+    font-size: 1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
     color: var(--colour-text-muted);
+    margin-bottom: 12px;
+}
+
+/* category colour accents - each category has its own identity
+   basics=green (brand), loops=blue (calm focus), obstacles=amber (caution/challenge),
+   conditionals=purple (advanced/sensor) */
+:root {
+    --cat-basics:       #3DAA6E;
+    --cat-loops:        #4A90D9;
+    --cat-obstacles:    #F5A623;
+    --cat-conditionals: #9B59B6;
+}
+
+.ls-tab[data-colour="green"].ls-tab--active  { background-color: var(--cat-basics) !important; border-color: var(--cat-basics) !important; box-shadow: 0 2px 8px rgba(61,170,110,0.35) !important; }
+.ls-tab[data-colour="blue"].ls-tab--active   { background-color: var(--cat-loops) !important; border-color: var(--cat-loops) !important; box-shadow: 0 2px 8px rgba(74,144,217,0.35) !important; }
+.ls-tab[data-colour="amber"].ls-tab--active  { background-color: var(--cat-obstacles) !important; border-color: var(--cat-obstacles) !important; box-shadow: 0 2px 8px rgba(245,166,35,0.35) !important; }
+.ls-tab[data-colour="purple"].ls-tab--active { background-color: var(--cat-conditionals) !important; border-color: var(--cat-conditionals) !important; box-shadow: 0 2px 8px rgba(155,89,182,0.35) !important; }
+
+/* level card top border colour per active category */
+.ls-grid[data-active-category="basics"]       .ls-card { border-top-color: var(--cat-basics); }
+.ls-grid[data-active-category="loops"]        .ls-card { border-top-color: var(--cat-loops); }
+.ls-grid[data-active-category="obstacles"]    .ls-card { border-top-color: var(--cat-obstacles); }
+.ls-grid[data-active-category="conditionals"] .ls-card { border-top-color: var(--cat-conditionals); }
+
+/* progress count inside each tab - small pill showing X/Y */
+.ls-tab-progress {
+    font-size: 11px;
+    font-weight: 800;
+    background: rgba(0,0,0,0.12);
+    border-radius: 100px;
+    padding: 2px 7px;
+    margin-left: 2px;
+    min-width: 28px;
+    text-align: center;
+    transition: background 0.18s ease;
+}
+
+.ls-tab--active .ls-tab-progress {
+    background: rgba(255,255,255,0.25);
+}
+
+/* all done state - filled circle to signal completion */
+.ls-tab-progress--done {
+    background: rgba(255,255,255,0.35) !important;
 }
 
 /* --- category tabs ---

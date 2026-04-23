@@ -89,7 +89,43 @@ async function fetchMyProgress() {
     return data;
 }
 
-// determines which category tabs should be unlocked based on completion
+// returns the student's display name from auth metadata
+// already stored at signup - no separate profiles query needed
+async function fetchDisplayName() {
+    const user = await getCurrentUser();
+    if (!user) return null;
+    return user.user_metadata?.display_name
+        ?? user.email?.split('@')[0]
+        ?? 'there';
+}
+
+// returns level counts and completion counts per category
+// used to show progress inside the category tabs
+async function fetchCategoryProgress() {
+    const user = await getCurrentUser();
+    if (!user) return {};
+
+    const [{ data: levels }, { data: progress }] = await Promise.all([
+        db.from('levels').select('id, category'),
+        db.from('student_progress')
+            .select('level_id')
+            .eq('student_id', user.id)
+            .eq('completed', true)
+    ]);
+
+    if (!levels) return {};
+
+    const completedIds = new Set((progress || []).map(p => p.level_id));
+    const result = {};
+
+    levels.forEach(l => {
+        if (!result[l.category]) result[l.category] = { total: 0, completed: 0 };
+        result[l.category].total++;
+        if (completedIds.has(l.id)) result[l.category].completed++;
+    });
+
+    return result;
+}
 // returns { loops: bool, obstacles: bool, conditionals: bool }
 // avoids hardcoding level IDs - derives unlock state from actual db counts
 async function fetchCategoryUnlockStatus() {

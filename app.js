@@ -357,6 +357,7 @@ function returnToLevelSelect() {
 
     // re-check category unlocks in case the student just completed a category
     if (typeof refreshCategoryTabs === 'function') refreshCategoryTabs();
+    if (typeof populateCategoryProgress === 'function') populateCategoryProgress();
 }
 
 // updates the in-game objective banner text
