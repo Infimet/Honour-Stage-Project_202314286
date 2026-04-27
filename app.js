@@ -1,4 +1,4 @@
- // main application logic (phase 2 + sprint 5 animation + sprint 6 blocks + walls)
+// main application logic (phase 2 + sprint 5 animation + sprint 6 blocks + walls)
 
 // --- toolbox definitions per category ---
 // progressive disclosure: each category reveals only the blocks students need
@@ -240,12 +240,12 @@ function runCode() {
     const onComplete = async () => {
         runBtn.disabled = false;
 
+        // calculate these here so both win and fail branches can use them
+        const blocksUsed = workspace.getAllBlocks(false).filter(b => !b.isShadow()).length;
+        const optimal    = window.activeLevel?.optimal_block_count ?? blocksUsed;
+
         if (window.robotInstance.checkWin()) {
-            // filter out shadow blocks (e.g. the grey number input inside repeat)
-            // getAllBlocks counts them but they are not user-placed blocks
-            const blocksUsed = workspace.getAllBlocks(false).filter(b => !b.isShadow()).length;
-            const optimal    = window.activeLevel?.optimal_block_count ?? blocksUsed;
-            const stars      = calculateStars(blocksUsed, optimal);
+            const stars = calculateStars(blocksUsed, optimal);
 
             if (window.activeLevel) await saveProgress(window.activeLevel.id, stars);
             showWinStars(stars);
