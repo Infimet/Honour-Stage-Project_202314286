@@ -1,4 +1,4 @@
-// main application logic (phase 2 + sprint 5 animation + sprint 6 blocks + walls)
+ // main application logic (phase 2 + sprint 5 animation + sprint 6 blocks + walls)
 
 // --- toolbox definitions per category ---
 // progressive disclosure: each category reveals only the blocks students need
@@ -265,6 +265,8 @@ function runCode() {
             setTimeout(() => {
                 flashAndReset(() => {
                     showErrorBanner("Hmm, not quite! Check your blocks and try again. 🤔");
+                    // request a pedagogical hint from the AIDE after the reset lands
+                    requestAideHint(blocksUsed, optimal);
                 });
             }, 1200);
         }
@@ -322,6 +324,7 @@ function resetApp() {
 function retryLevel() {
     document.getElementById('winModal').classList.add('hidden');
     hideErrorBanner();
+    resetAide();
     window.robotInstance.reset();
 }
 
@@ -342,6 +345,7 @@ function nextLevel() {
         window.activeLevel = next;
         updateObjectiveBanner(next);
         updateToolboxForCategory(next.category);
+        resetAide();
     } else {
         returnToLevelSelect();
     }
@@ -372,7 +376,70 @@ function updateToolboxForCategory(category) {
     // no-op for now
 }
 
-// --- win modal ---
+// --- AIDE teacher console ---
+// requests a pedagogical hint from the gemini api via the vercel serverless function
+// the hint is context-aware: it knows the level, the student's code, and block efficiency
+// this implements the Intelligent Tutoring System described in the architecture doc
+// ref: Hattie (2009) - feedback is one of the highest-impact educational interventions
+
+async function requestAideHint(blocksUsed, optimal) {
+    if (!window.activeLevel) return;
+
+    const code = javascript.javascriptGenerator.workspaceToCode(workspace);
+    if (!code.trim()) return;
+
+    setAideState('thinking');
+
+    try {
+        const response = await fetch('/api/aide', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                levelTitle:       window.activeLevel.title,
+                levelDescription: window.activeLevel.description,
+                category:         window.activeLevel.category,
+                blocksUsed,
+                optimal,
+                code
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.hint) {
+            setAideState('hint', data.hint);
+        } else {
+            setAideState('idle');
+        }
+    } catch (err) {
+        console.error('aide request failed:', err);
+        setAideState('idle');
+    }
+}
+
+// sets the visual state of the AIDE console
+// idle: quiet placeholder, thinking: animated dots, hint: the returned text
+function setAideState(state, hint = '') {
+    const body = document.getElementById('aideBody');
+    if (!body) return;
+
+    if (state === 'idle') {
+        body.innerHTML = '<p class="aide-idle">Your teacher is watching. Give it your best try!</p>';
+    } else if (state === 'thinking') {
+        body.innerHTML = `
+            <div class="aide-thinking">
+                <span></span><span></span><span></span>
+            </div>
+        `;
+    } else if (state === 'hint') {
+        body.innerHTML = `<p class="aide-hint-text">${hint}</p>`;
+    }
+}
+
+// reset the aide console when the student moves to a new level or retries
+function resetAide() {
+    setAideState('idle');
+}
 
 // renders star icons with sequential pop-in animation
 // 150ms gap between stars (Gelman 2014: each star should feel like a distinct achievement)

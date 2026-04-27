@@ -805,6 +805,102 @@ body {
 }
 
 
+/* --- aide teacher console ---
+   proactive intelligent tutoring system - provides context-aware hints
+   after a failed attempt via the gemini api serverless function
+   three states: idle (quiet), thinking (animated dots), hint (ai response)
+   ref: Hattie (2009) - feedback is one of the highest-impact educational interventions
+   non-punitive framing mirrors the amber banner approach (Gapsy Studio 2026) */
+
+.aide-console {
+    width: 100%;
+    margin-top: 12px;
+    background: var(--colour-surface);
+    border: 1.5px solid var(--colour-border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.aide-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--colour-green-lt);
+    border-bottom: 1.5px solid var(--colour-border);
+}
+
+.aide-icon {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.aide-label {
+    font-family: var(--font-main);
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--colour-green-dk);
+}
+
+.aide-body {
+    padding: 12px 14px;
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+}
+
+.aide-idle {
+    font-family: var(--font-main);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--colour-text-muted);
+    font-style: italic;
+    margin: 0;
+}
+
+.aide-hint-text {
+    font-family: var(--font-main);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--colour-text);
+    line-height: 1.5;
+    margin: 0;
+    animation: hint-fade-in 0.4s ease both;
+}
+
+@keyframes hint-fade-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.aide-thinking {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.aide-thinking span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--colour-green);
+    animation: lt-dot-bounce 0.9s ease-in-out infinite;
+}
+
+.aide-thinking span:nth-child(2) {
+    animation-delay: 0.15s;
+    background: var(--colour-blue);
+}
+
+.aide-thinking span:nth-child(3) {
+    animation-delay: 0.3s;
+    background: var(--colour-amber);
+}
+
+
 .modal {
     position: fixed;
     inset: 0;
