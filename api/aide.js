@@ -1,32 +1,23 @@
 // api/aide.js
-// vercel serverless function - proxies requests to gemini api
+// vercel serverless function - proxies requests to anthropic api
 // the api key lives in vercel environment variables and never reaches the client
-// this is the standard pattern for securing llm api keys in client-side apps
 
 export default async function handler(req, res) {
-    // only accept POST requests
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'method not allowed' });
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    console.log('api key present:', !!apiKey, '| key prefix:', apiKey ? apiKey.substring(0, 8) : 'none');
+    const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
         return res.status(500).json({ error: 'api key not configured' });
     }
 
     const { levelTitle, levelDescription, category, blocksUsed, optimal, code } = req.body;
 
-    // validate required fields
     if (!levelTitle || !code) {
         return res.status(400).json({ error: 'missing required fields' });
     }
 
-    // build the pedagogical prompt - this is the core of the AIDE
-    // the prompt is strict: no direct answers, conceptual hints only,
-    // child-appropriate language, warm and encouraging tone
-    // this directly implements the Intelligent Tutoring System pattern
-    // described in the project architecture doc (inspired by Duolingo)
     const prompt = `You are a warm, encouraging teacher helping a child aged 7-11 learn programming using a block-based robot game.
 
 The student is programming a robot on a grid to reach a green target.
@@ -48,33 +39,28 @@ The robot did not reach the target. Write a hint of 2-3 short sentences that:
 Do not use bullet points. Do not write code. Keep it short and friendly.`;
 
     try {
-        const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: {
-                        temperature: 0.7,
-                        maxOutputTokens: 120,
-                    }
-                })
-            }
-        );
-
-        const responseText = await response.text();
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': apiKey,
+                'anthropic-version': '2023-06-01'
+            },
+            body: JSON.stringify({
+                model: 'claude-haiku-4-5',
+                max_tokens: 150,
+                messages: [{ role: 'user', content: prompt }]
+            })
+        });
 
         if (!response.ok) {
-            // log full error in chunks so vercel doesn't truncate it
-            console.error('gemini status:', response.status);
-            console.error('gemini error part 1:', responseText.substring(0, 300));
-            console.error('gemini error part 2:', responseText.substring(300, 600));
-            return res.status(502).json({ error: 'gemini request failed', detail: responseText.substring(0, 200) });
+            const err = await response.text();
+            console.error('anthropic api error:', response.status, err.substring(0, 300));
+            return res.status(502).json({ error: 'anthropic request failed' });
         }
 
-        const data = JSON.parse(responseText);
-        const hint = data.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
+        const data = await response.json();
+        const hint = data.content?.[0]?.text ?? null;
 
         if (!hint) {
             return res.status(502).json({ error: 'no hint returned' });
@@ -83,7 +69,7 @@ Do not use bullet points. Do not write code. Keep it short and friendly.`;
         return res.status(200).json({ hint });
 
     } catch (err) {
-        console.error('aide handler error:', err);
+        console.error('aide handler error:', err.message);
         return res.status(500).json({ error: 'internal server error' });
     }
 }
