@@ -10,6 +10,7 @@ export default async function handler(req, res) {
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
+    console.log('api key present:', !!apiKey, '| key prefix:', apiKey ? apiKey.substring(0, 8) : 'none');
     if (!apiKey) {
         return res.status(500).json({ error: 'api key not configured' });
     }
@@ -62,13 +63,17 @@ Do not use bullet points. Do not write code. Keep it short and friendly.`;
             }
         );
 
+        const responseText = await response.text();
+
         if (!response.ok) {
-            const err = await response.text();
-            console.error('gemini api error:', err);
-            return res.status(502).json({ error: 'gemini request failed' });
+            // log full error in chunks so vercel doesn't truncate it
+            console.error('gemini status:', response.status);
+            console.error('gemini error part 1:', responseText.substring(0, 300));
+            console.error('gemini error part 2:', responseText.substring(300, 600));
+            return res.status(502).json({ error: 'gemini request failed', detail: responseText.substring(0, 200) });
         }
 
-        const data = await response.json();
+        const data = JSON.parse(responseText);
         const hint = data.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
 
         if (!hint) {
