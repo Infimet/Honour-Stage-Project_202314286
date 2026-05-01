@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/aide.js": {
+      "regions": ["iad1"]
+    }
+  }
+}
