@@ -68,7 +68,7 @@ Blockly.Blocks['move_forward'] = {
         this.appendDummyInput().appendField("Move Forward");
         this.setPreviousStatement(true, null);
         this.setNextStatement(true, null);
-        this.setColour(160);
+        this.setColour(210);
         this.setTooltip("Moves the robot one step forward");
     }
 };
@@ -78,7 +78,7 @@ Blockly.Blocks['move_backward'] = {
         this.appendDummyInput().appendField("Move Backward");
         this.setPreviousStatement(true, null);
         this.setNextStatement(true, null);
-        this.setColour(160);
+        this.setColour(210);
         this.setTooltip("Moves the robot one step backward");
     }
 };
@@ -88,7 +88,7 @@ Blockly.Blocks['turn_right'] = {
         this.appendDummyInput().appendField("Turn Right ↻");
         this.setPreviousStatement(true, null);
         this.setNextStatement(true, null);
-        this.setColour(160);
+        this.setColour(210);
         this.setTooltip("Turns the robot 90 degrees right");
     }
 };
@@ -98,8 +98,49 @@ Blockly.Blocks['turn_left'] = {
         this.appendDummyInput().appendField("Turn Left ↺");
         this.setPreviousStatement(true, null);
         this.setNextStatement(true, null);
-        this.setColour(160);
+        this.setColour(210);
         this.setTooltip("Turns the robot 90 degrees left");
+    }
+};
+
+// turn_around - 180 degree turn, teaches composition (= two turn_right blocks)
+Blockly.Blocks['turn_around'] = {
+    init: function() {
+        this.appendDummyInput().appendField("Turn Around ↕");
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(210);
+        this.setTooltip("Turns the robot 180 degrees");
+    }
+};
+
+// if_path_blocked - inverse of if_path_clear, teaches negation
+Blockly.Blocks['if_path_blocked'] = {
+    init: function() {
+        this.appendDummyInput()
+            .appendField("If path is blocked");
+        this.appendStatementInput('DO')
+            .setCheck(null)
+            .appendField("do");
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(65);
+        this.setTooltip("Only runs the blocks inside if the path ahead is blocked");
+    }
+};
+
+// while_path_clear - combines loop + sensor, teaches while-loop semantics
+Blockly.Blocks['while_path_clear'] = {
+    init: function() {
+        this.appendDummyInput()
+            .appendField("While path is clear");
+        this.appendStatementInput('DO')
+            .setCheck(null)
+            .appendField("do");
+        this.setPreviousStatement(true, null);
+        this.setNextStatement(true, null);
+        this.setColour(65);
+        this.setTooltip("Keeps repeating the blocks inside as long as the path ahead is clear");
     }
 };
 
@@ -135,6 +176,21 @@ javascript.javascriptGenerator.forBlock['turn_right'] = function(block) {
 
 javascript.javascriptGenerator.forBlock['turn_left'] = function(block) {
     return 'window.robotInstance.turnLeft();\n';
+};
+
+javascript.javascriptGenerator.forBlock['turn_around'] = function(block) {
+    return 'window.robotInstance.turnRight();\nwindow.robotInstance.turnRight();\n';
+};
+
+javascript.javascriptGenerator.forBlock['if_path_blocked'] = function(block) {
+    const branch = javascript.javascriptGenerator.statementToCode(block, 'DO');
+    return `if (!window.robotInstance.isPathClear()) {\n${branch}}\n`;
+};
+
+javascript.javascriptGenerator.forBlock['while_path_clear'] = function(block) {
+    const branch = javascript.javascriptGenerator.statementToCode(block, 'DO');
+    // safety limit prevents infinite loops from locking the browser
+    return `var _safety = 0;\nwhile (window.robotInstance.isPathClear() && _safety++ < 50) {\n${branch}}\n`;
 };
 
 javascript.javascriptGenerator.forBlock['if_path_clear'] = function(block) {

@@ -231,6 +231,13 @@ class Robot {
         this._enqueue({ type: 'turn', toAngle: this._lAngle, delta: 90 });
     }
 
+    // 180 degree turn - teaches composition (two turnRight calls under the hood)
+    // the turn_around block generates two turnRight() calls so this animates as two turns
+    turnAround() {
+        this.turnRight();
+        this.turnRight();
+    }
+
     // returns true if the path directly ahead is clear
     // used by the if_path_clear blockly block
     // checks logical position so it respects already-queued moves
