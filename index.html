@@ -127,10 +127,62 @@
                     <h2>Block Programming</h2>
                 </div>
 
-                <!-- blocklyDiv - toolbox defined below as static xml -->
+                <!-- blocklyDiv - toolbox swapped per category via updateToolboxForCategory() in app.js -->
                 <div id="blocklyDiv"></div>
 
-                <xml id="toolbox" style="display: none">
+                <!-- basics: movement only (Sweller 1988 - progressive disclosure) -->
+                <xml id="toolbox-basics" style="display: none">
+                    <category name="Movement" colour="210">
+                        <block type="move_forward"></block>
+                        <block type="move_backward"></block>
+                        <block type="turn_right"></block>
+                        <block type="turn_left"></block>
+                        <block type="turn_around"></block>
+                    </category>
+                </xml>
+
+                <!-- loops: movement + repeat block introduced -->
+                <xml id="toolbox-loops" style="display: none">
+                    <category name="Movement" colour="210">
+                        <block type="move_forward"></block>
+                        <block type="move_backward"></block>
+                        <block type="turn_right"></block>
+                        <block type="turn_left"></block>
+                        <block type="turn_around"></block>
+                    </category>
+                    <category name="Loops" colour="120">
+                        <block type="controls_repeat_ext">
+                            <value name="TIMES">
+                                <shadow type="math_number">
+                                    <field name="NUM">3</field>
+                                </shadow>
+                            </value>
+                        </block>
+                    </category>
+                </xml>
+
+                <!-- obstacles: same as loops - walls are the challenge, no new blocks -->
+                <xml id="toolbox-obstacles" style="display: none">
+                    <category name="Movement" colour="210">
+                        <block type="move_forward"></block>
+                        <block type="move_backward"></block>
+                        <block type="turn_right"></block>
+                        <block type="turn_left"></block>
+                        <block type="turn_around"></block>
+                    </category>
+                    <category name="Loops" colour="120">
+                        <block type="controls_repeat_ext">
+                            <value name="TIMES">
+                                <shadow type="math_number">
+                                    <field name="NUM">3</field>
+                                </shadow>
+                            </value>
+                        </block>
+                    </category>
+                </xml>
+
+                <!-- conditionals: all blocks including sensors category -->
+                <xml id="toolbox-conditionals" style="display: none">
                     <category name="Movement" colour="210">
                         <block type="move_forward"></block>
                         <block type="move_backward"></block>

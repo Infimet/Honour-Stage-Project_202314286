@@ -223,9 +223,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     const canvas = document.getElementById('robotCanvas');
     window.robotInstance = new Robot(canvas);
 
-    // inject with the static toolbox defined in index.html
+    // inject with the basics toolbox - swapped per category when a level launches
     workspace = Blockly.inject('blocklyDiv', {
-        toolbox: document.getElementById('toolbox'),
+        toolbox: document.getElementById('toolbox-basics'),
         scrollbars: false
     });
 
@@ -426,10 +426,16 @@ function updateObjectiveBanner(level) {
     document.getElementById('objectiveDesc').textContent  = level.description ?? '';
 }
 
-// dynamic toolbox switching deferred - all categories visible from the static toolbox in index.html
-// the level descriptions guide students to the right blocks for each category
+// updates the blockly toolbox to match the level's category
+// uses document.getElementById to get the correct xml dom element directly -
+// blockly accepts a real dom element and this avoids the DOMParser failure
+// that occurred when passing xml strings to workspace.updateToolbox()
 function updateToolboxForCategory(category) {
-    // no-op for now
+    const toolboxId = `toolbox-${category}`;
+    const toolboxEl = document.getElementById(toolboxId);
+    if (workspace && toolboxEl) {
+        workspace.updateToolbox(toolboxEl);
+    }
 }
 
 // --- AIDE teacher console ---
@@ -513,7 +519,7 @@ function showWinStars(stars) {
     setTimeout(() => spawnConfetti(), stars * 150 + 100);
 }
 
-// brief confetti burst inside the modal - pure js/css, no library needed
+// brief confetti burst inside the modal
 // multimodal reward signal (Gapsy Studio 2026; Khan Academy Kids session data)
 function spawnConfetti() {
     const modal   = document.querySelector('.modal-content');
