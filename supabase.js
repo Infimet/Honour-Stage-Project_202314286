@@ -56,9 +56,9 @@ async function saveProgress(levelId, starsEarned) {
         .eq('level_id', levelId)
         .maybeSingle();
 
-    const finalStars = existing
-        ? Math.max(existing.stars_earned ?? 0, starsEarned)
-        : starsEarned;
+    const previousStars = existing?.stars_earned ?? 0;
+    const finalStars    = Math.max(previousStars, starsEarned);
+    const starsDelta    = finalStars - previousStars; // only award new stars
 
     const { error } = await db
         .from('student_progress')
@@ -67,7 +67,97 @@ async function saveProgress(levelId, starsEarned) {
             { onConflict: 'student_id,level_id' }
         );
 
-    if (error) console.error('could not save progress:', error.message);
+    if (error) {
+        console.error('could not save progress:', error.message);
+        return;
+    }
+
+    // update total_stars on profiles if stars improved
+    // and update streak + last_active_date
+    if (starsDelta > 0 || !existing) {
+        await updateProfileOnCompletion(user.id, starsDelta);
+    } else {
+        // still update streak even if no new stars
+        await updateStreak(user.id);
+    }
+}
+
+// updates total_stars and streak fields on the profiles table after level completion
+async function updateProfileOnCompletion(userId, starsDelta) {
+    const { data: profile } = await db
+        .from('profiles')
+        .select('total_stars, streak_current, streak_longest, last_active_date')
+        .eq('id', userId)
+        .maybeSingle();
+
+    if (!profile) return;
+
+    const today         = new Date().toISOString().split('T')[0];
+    const lastActive    = profile.last_active_date;
+    const yesterday     = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+    let streakCurrent = profile.streak_current ?? 0;
+
+    if (lastActive === today) {
+        // already active today - streak unchanged
+    } else if (lastActive === yesterday) {
+        // consecutive day - increment streak
+        streakCurrent += 1;
+    } else {
+        // streak broken or first time
+        streakCurrent = 1;
+    }
+
+    const streakLongest = Math.max(profile.streak_longest ?? 0, streakCurrent);
+
+    await db.from('profiles').update({
+        total_stars:      (profile.total_stars ?? 0) + starsDelta,
+        streak_current:   streakCurrent,
+        streak_longest:   streakLongest,
+        last_active_date: today
+    }).eq('id', userId);
+}
+
+// updates streak only (called when level replayed with no new stars)
+async function updateStreak(userId) {
+    const { data: profile } = await db
+        .from('profiles')
+        .select('streak_current, streak_longest, last_active_date')
+        .eq('id', userId)
+        .maybeSingle();
+
+    if (!profile) return;
+
+    const today      = new Date().toISOString().split('T')[0];
+    const yesterday  = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+    const lastActive = profile.last_active_date;
+
+    if (lastActive === today) return; // already updated today
+
+    let streakCurrent = profile.streak_current ?? 0;
+    streakCurrent = lastActive === yesterday ? streakCurrent + 1 : 1;
+    const streakLongest = Math.max(profile.streak_longest ?? 0, streakCurrent);
+
+    await db.from('profiles').update({
+        streak_current:   streakCurrent,
+        streak_longest:   streakLongest,
+        last_active_date: today
+    }).eq('id', userId);
+}
+
+// logs an AIDE hint interaction to the aide_interactions table
+// used by the teacher dashboard to show where students needed help
+async function recordAideInteraction(levelId, hintText, blocksUsed, optimal) {
+    const user = await getCurrentUser();
+    if (!user) return;
+
+    await db.from('aide_interactions').insert({
+        student_id:  user.id,
+        level_id:    levelId,
+        hint_text:   hintText,
+        blocks_used: blocksUsed,
+        optimal
+    });
 }
 
 // fetches all progress rows for the currently logged in student

@@ -470,6 +470,15 @@ async function requestAideHint(blocksUsed, optimal) {
 
         if (data.hint) {
             setAideState('hint', data.hint);
+            // log the interaction for teacher dashboard telemetry
+            if (window.activeLevel) {
+                recordAideInteraction(
+                    window.activeLevel.id,
+                    data.hint,
+                    blocksUsed,
+                    optimal
+                ).catch(e => console.error('aide interaction log failed:', e));
+            }
         } else {
             setAideState('idle');
         }
@@ -519,7 +528,7 @@ function showWinStars(stars) {
     setTimeout(() => spawnConfetti(), stars * 150 + 100);
 }
 
-// brief confetti burst inside the modal
+// brief confetti burst inside the modal - pure js/css, no library needed
 // multimodal reward signal (Gapsy Studio 2026; Khan Academy Kids session data)
 function spawnConfetti() {
     const modal   = document.querySelector('.modal-content');
