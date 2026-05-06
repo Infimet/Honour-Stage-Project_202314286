@@ -183,23 +183,31 @@ async function refreshCategoryTabs() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // check if user is a teacher - redirect to dashboard if so
-    const user = await getCurrentUser();
-    if (user) {
-        const { data: profile } = await db.from('profiles')
-            .select('role, class_id')
-            .eq('id', user.id)
-            .maybeSingle();
+    try {
+        const { data: { session } } = await db.auth.getSession();
+        const user = session?.user ?? null;
+        console.log('[auth] session user:', user?.email ?? 'none');
 
-        if (profile?.role === 'teacher') {
-            window.location.href = 'teacher.html';
-            return;
-        }
+        if (user) {
+            const { data: profile, error: profileError } = await db.from('profiles')
+                .select('role, class_id')
+                .eq('id', user.id)
+                .maybeSingle();
 
-        // show join class prompt if student has no class yet
-        if (!profile?.class_id) {
-            renderJoinClassPrompt();
+            console.log('[auth] profile:', profile, 'error:', profileError?.message);
+
+            if (profile?.role === 'teacher') {
+                console.log('[auth] redirecting to teacher.html');
+                window.location.href = 'teacher.html';
+                return;
+            }
+
+            if (!profile?.class_id) {
+                renderJoinClassPrompt();
+            }
         }
+    } catch (e) {
+        console.error('[auth] teacher check failed:', e.message);
     }
 
     initTabs();
