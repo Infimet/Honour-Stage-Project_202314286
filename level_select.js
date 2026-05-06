@@ -181,13 +181,70 @@ async function refreshCategoryTabs() {
     });
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // check if user is a teacher - redirect to dashboard if so
+    const user = await getCurrentUser();
+    if (user) {
+        const { data: profile } = await db.from('profiles')
+            .select('role, class_id')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (profile?.role === 'teacher') {
+            window.location.href = 'teacher.html';
+            return;
+        }
+
+        // show join class prompt if student has no class yet
+        if (!profile?.class_id) {
+            renderJoinClassPrompt();
+        }
+    }
+
     initTabs();
     renderLevelSelect('basics');
     refreshCategoryTabs();
     populateGreeting();
     populateCategoryProgress();
 });
+
+// shows a small join class banner at the top if student hasn't joined a class
+function renderJoinClassPrompt() {
+    const el = document.getElementById('joinClassBanner');
+    if (!el) return;
+    el.classList.remove('hidden');
+}
+
+async function joinClass() {
+    const input = document.getElementById('classCodeInput');
+    const code  = input?.value?.trim().toUpperCase();
+    if (!code || code.length !== 6) {
+        alert('Please enter a valid 6-character class code.');
+        return;
+    }
+
+    const { data: cls } = await db.from('classes')
+        .select('id')
+        .eq('class_code', code)
+        .maybeSingle();
+
+    if (!cls) {
+        alert('Class code not found. Check with your teacher.');
+        return;
+    }
+
+    const user = await getCurrentUser();
+    const { error } = await db.from('profiles')
+        .update({ class_id: cls.id })
+        .eq('id', user.id);
+
+    if (error) {
+        alert('Failed to join class: ' + error.message);
+        return;
+    }
+
+    document.getElementById('joinClassBanner').classList.add('hidden');
+}
 
 // sets the personalised greeting based on time of day and student name
 async function populateGreeting() {

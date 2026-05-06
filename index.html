@@ -40,6 +40,14 @@
                 <p class="ls-section-sub">Complete each category to unlock the next one.</p>
             </div>
 
+            <!-- join class banner - shown if student has no class_id -->
+            <div id="joinClassBanner" class="join-class-banner hidden">
+                <span class="join-class-icon">🏫</span>
+                <span class="join-class-text">Has your teacher given you a class code?</span>
+                <input id="classCodeInput" class="join-class-input" placeholder="Enter code" maxlength="6" />
+                <button class="join-class-btn" onclick="joinClass()">Join</button>
+            </div>
+
             <h2 class="ls-category-heading">Choose a Level</h2>
 
             <nav class="ls-tabs" id="lsTabs" role="tablist" aria-label="Level categories">

@@ -8,6 +8,7 @@
     --colour-green-lt:   #e8f5ee;
     --colour-blue:       #4A90D9;
     --colour-blue-dk:    #3070b3;
+    --colour-blue-lt:    #e8f2fc;
     --colour-amber:      #F5A623;
     --colour-error:      #E53935;
     --colour-text:       #1A1A2E;
@@ -144,6 +145,52 @@ body {
     margin-bottom: 4px;
     letter-spacing: -0.02em;
 }
+
+/* join class banner - shown to students who haven't joined a class yet */
+.join-class-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--colour-blue-lt, #e8f2fc);
+    border: 1.5px solid var(--colour-blue);
+    border-radius: var(--radius-md);
+    padding: 12px 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+.join-class-icon { font-size: 18px; }
+.join-class-text {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--colour-text);
+    flex: 1;
+    min-width: 160px;
+}
+.join-class-input {
+    padding: 8px 12px;
+    border: 1.5px solid var(--colour-blue);
+    border-radius: var(--radius-sm);
+    font-family: var(--font-main);
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    width: 120px;
+    outline: none;
+}
+.join-class-btn {
+    background: var(--colour-blue);
+    color: #fff;
+    border: none;
+    padding: 8px 18px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-main);
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.join-class-btn:hover { background: var(--colour-blue-dk, #3070b3); }
 
 /* choose a level heading above the tabs */
 .ls-category-heading {
