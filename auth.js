@@ -13,11 +13,27 @@ document.querySelectorAll('.auth-tab').forEach(tab => {
     });
 });
 
+// redirect to correct page based on role
+// teachers → teacher.html, students → index.html
+async function redirectAfterAuth() {
+    const { data: { user } } = await db.auth.getUser();
+    if (!user) { window.location.href = 'index.html'; return; }
+
+    const { data: profile } = await db
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+
+    window.location.href = profile?.role === 'teacher' ? 'teacher.html' : 'index.html';
+}
+
 // sign in
 document.getElementById('signinBtn').addEventListener('click', async () => {
     const email    = document.getElementById('signinEmail').value.trim();
     const password = document.getElementById('signinPassword').value;
     const errorEl  = document.getElementById('signinError');
+    const btn      = document.getElementById('signinBtn');
 
     errorEl.classList.add('hidden');
 
@@ -27,16 +43,21 @@ document.getElementById('signinBtn').addEventListener('click', async () => {
         return;
     }
 
+    btn.textContent = 'Signing in…';
+    btn.disabled    = true;
+
     const { error } = await db.auth.signInWithPassword({ email, password });
 
     if (error) {
         errorEl.textContent = error.message;
         errorEl.classList.remove('hidden');
+        btn.textContent = 'Sign In';
+        btn.disabled    = false;
         return;
     }
 
-    // redirect to the main app on success
-    window.location.href = 'index.html';
+    // check role and redirect to the right page
+    await redirectAfterAuth();
 });
 
 // sign up (students only — teachers are created via supabase dashboard)
@@ -45,6 +66,7 @@ document.getElementById('signupBtn').addEventListener('click', async () => {
     const email    = document.getElementById('signupEmail').value.trim();
     const password = document.getElementById('signupPassword').value;
     const errorEl  = document.getElementById('signupError');
+    const btn      = document.getElementById('signupBtn');
 
     errorEl.classList.add('hidden');
 
@@ -60,6 +82,9 @@ document.getElementById('signupBtn').addEventListener('click', async () => {
         return;
     }
 
+    btn.textContent = 'Creating account…';
+    btn.disabled    = true;
+
     const { error } = await db.auth.signUp({
         email,
         password,
@@ -69,9 +94,11 @@ document.getElementById('signupBtn').addEventListener('click', async () => {
     if (error) {
         errorEl.textContent = error.message;
         errorEl.classList.remove('hidden');
+        btn.textContent = 'Create Account';
+        btn.disabled    = false;
         return;
     }
 
-    // redirect straight to the app — email confirmation is turned off
+    // students always go to index.html
     window.location.href = 'index.html';
 });
