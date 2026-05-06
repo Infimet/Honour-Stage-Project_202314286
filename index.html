@@ -219,16 +219,9 @@
                     <button id="resetButton" class="reset-button">↺ Reset</button>
                     <button id="backButton" class="back-button">← Level Select</button>
                 </div>
-            </div>
 
-            <div class="column right-column">
-                <div class="column-heading">
-                    <span class="column-heading-icon">🤖</span>
-                    <h2>Robot Canvas</h2>
-                </div>
-                <canvas id="robotCanvas" width="600" height="600"></canvas>
-
-                <!-- aide teacher console - populated by the gemini api on failure -->
+                <!-- aide teacher console moved to left column so right column is canvas only
+                     this prevents the overflow issue where aide pushed below viewport height -->
                 <div class="aide-console" id="aideConsole">
                     <div class="aide-header">
                         <span class="aide-icon">💡</span>
@@ -238,6 +231,14 @@
                         <p class="aide-idle">Your teacher is watching. Give it your best try!</p>
                     </div>
                 </div>
+            </div>
+
+            <div class="column right-column">
+                <div class="column-heading">
+                    <span class="column-heading-icon">🤖</span>
+                    <h2>Robot Canvas</h2>
+                </div>
+                <canvas id="robotCanvas" width="600" height="600"></canvas>
             </div>
 
         </div>

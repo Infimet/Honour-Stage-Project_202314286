@@ -114,6 +114,7 @@ function launchLevel(level) {
 
         if (typeof updateToolboxForCategory === 'function') updateToolboxForCategory(level.category);
         if (typeof updateObjectiveBanner    === 'function') updateObjectiveBanner(level);
+        if (typeof resetAide               === 'function') resetAide();
 
         window.robotInstance.loadLevelFromDb(level);
         window.activeLevel = level;

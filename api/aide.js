@@ -18,6 +18,37 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'missing required fields' });
     }
 
+    // build category-specific context for the prompt
+    // this makes hints relevant to what the student should be thinking about
+    const categoryContext = {
+        basics: `This is a movement basics level. The student should be thinking about:
+- Which direction the robot is facing (it starts facing UP/north)
+- How many steps forward are needed to reach the target
+- Whether any turns are needed and in which direction
+- If they used more blocks than optimal, gently encourage them to think about whether a loop could make it more efficient`,
+
+        loops: `This is a loops level. The student should be thinking about:
+- Using the Repeat block to avoid repeating the same blocks over and over
+- How many times an action needs to repeat
+- Combining movement blocks inside a repeat block
+- Whether their solution could be made shorter and more efficient with loops`,
+
+        obstacles: `This is an obstacles level. There are walls on the grid blocking certain paths.
+The student should be thinking about:
+- Looking at where the walls are on the grid before coding
+- Planning a route around the obstacles rather than straight to the target
+- Using turns to navigate around walls
+- Breaking the journey into segments: move to clear space, turn, move again`,
+
+        conditionals: `This is a conditionals level. The student should be thinking about:
+- Using the sensor blocks (If Path is Clear, While Path is Clear) to detect walls
+- The robot can "see" one step ahead - use this to make decisions
+- Combining movement with sensor checks
+- The While Path is Clear block repeats as long as the path ahead is open`
+    };
+
+    const catGuidance = categoryContext[category] || categoryContext.basics;
+
     const prompt = `You are a warm, encouraging teacher helping a child aged 7-11 learn programming using a block-based robot game.
 
 The student is programming a robot on a grid to reach a green target.
@@ -29,12 +60,16 @@ Blocks the student used: ${blocksUsed}
 Optimal number of blocks: ${optimal}
 What their code does: ${code}
 
+CATEGORY CONTEXT — use this to make your hint relevant:
+${catGuidance}
+
 The robot did not reach the target. Write a hint of 2-3 short sentences that:
 - Does NOT reveal the answer or give exact instructions
-- Explains conceptually what might have gone wrong or what to think about
+- Explains conceptually what might have gone wrong based on the category context above
 - Uses simple language a child can understand (no jargon)
 - Is warm, encouraging and not discouraging
-- Starts with a short encouraging phrase
+- Starts with a short encouraging phrase like "Great try!" or "You're on the right track!"
+- If blocks used is significantly more than optimal, gently hint that there might be a more efficient way
 
 Do not use bullet points. Do not write code. Keep it short and friendly.`;
 

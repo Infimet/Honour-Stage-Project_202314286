@@ -519,8 +519,10 @@ body {
 }
 
 .left-column {
-    min-width: 400px;
-    overflow: hidden;
+    min-width: 380px;
+    max-width: 480px;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .right-column {
@@ -528,6 +530,8 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
+    min-width: 0;
+    overflow: hidden;
 }
 
 /* column headings use a subtle green pill to tie into the design language */
@@ -568,6 +572,10 @@ body {
     background-color: var(--colour-white);
     border-radius: var(--radius-md);
     max-width: 100%;
+    max-height: calc(100vh - 160px);
+    aspect-ratio: 1;
+    width: 100%;
+    object-fit: contain;
 }
 
 /* canvas flash overlay - slow fade to black then back, with a hold at peak
@@ -861,7 +869,7 @@ body {
 
 .aide-console {
     width: 100%;
-    margin-top: 12px;
+    margin-top: 14px;
     background: var(--colour-surface);
     border: 1.5px solid var(--colour-border);
     border-radius: var(--radius-md);
