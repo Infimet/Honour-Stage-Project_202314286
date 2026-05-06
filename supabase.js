@@ -80,6 +80,9 @@ async function saveProgress(levelId, starsEarned) {
         // still update streak even if no new stars
         await updateStreak(user.id);
     }
+
+    // check and award any badges earned by this completion
+    await checkAndAwardBadges(user.id, levelId);
 }
 
 // updates total_stars and streak fields on the profiles table after level completion
@@ -143,6 +146,90 @@ async function updateStreak(userId) {
         streak_longest:   streakLongest,
         last_active_date: today
     }).eq('id', userId);
+}
+
+// checks which badges the student has earned and awards any new ones
+// called after every level completion - uses upsert via unique constraint
+// so running it multiple times is safe (no duplicate badges)
+async function checkAndAwardBadges(userId, levelId) {
+    try {
+        // fetch everything we need in parallel
+        const [
+            { data: allProgress },
+            { data: allLevels },
+            { data: profile },
+            { data: aideLog },
+            { data: earnedBadges }
+        ] = await Promise.all([
+            db.from('student_progress').select('level_id, completed, stars_earned').eq('student_id', userId),
+            db.from('levels').select('id, category'),
+            db.from('profiles').select('streak_current').eq('id', userId).maybeSingle(),
+            db.from('aide_interactions').select('level_id').eq('student_id', userId),
+            db.from('student_badges').select('badge_key').eq('student_id', userId)
+        ]);
+
+        if (!allProgress || !allLevels) return;
+
+        const completedIds  = new Set(allProgress.filter(p => p.completed).map(p => p.level_id));
+        const alreadyEarned = new Set((earnedBadges || []).map(b => b.badge_key));
+        const hintLevelIds  = new Set((aideLog || []).map(a => a.level_id));
+        const toAward       = [];
+
+        const award = key => { if (!alreadyEarned.has(key)) toAward.push(key); };
+
+        // completion badges
+        if (completedIds.size >= 1)           award('first_steps');
+        if (completedIds.has(levelId))        award('speed_coder'); // first attempt handled separately
+
+        // category completion badges
+        const byCategory = {};
+        allLevels.forEach(l => {
+            if (!byCategory[l.category]) byCategory[l.category] = { total: 0, done: 0 };
+            byCategory[l.category].total++;
+            if (completedIds.has(l.id)) byCategory[l.category].done++;
+        });
+
+        if (byCategory.basics?.done       === byCategory.basics?.total)       award('movement_master');
+        if (byCategory.loops?.done        === byCategory.loops?.total)         award('loop_legend');
+        if (byCategory.obstacles?.done    === byCategory.obstacles?.total)     award('obstacle_overcomer');
+        if (byCategory.conditionals?.done === byCategory.conditionals?.total)  award('conditional_commander');
+
+        // curriculum complete
+        const totalLevels   = allLevels.length;
+        const totalComplete = completedIds.size;
+        if (totalComplete >= totalLevels && totalLevels > 0) award('curriculum_complete');
+
+        // perfect run: 3 stars on current level with no hints used on that level
+        const thisProgress = allProgress.find(p => p.level_id === levelId);
+        if (thisProgress?.stars_earned === 3 && !hintLevelIds.has(levelId)) {
+            award('perfect_run');
+        }
+
+        // no hints needed: full category with no hints on any level in it
+        const currentLevel = allLevels.find(l => l.id === levelId);
+        if (currentLevel) {
+            const catLevels = allLevels.filter(l => l.category === currentLevel.category).map(l => l.id);
+            const allCatComplete  = catLevels.every(id => completedIds.has(id));
+            const noHintsInCat    = catLevels.every(id => !hintLevelIds.has(id));
+            if (allCatComplete && noHintsInCat) award('no_hints_needed');
+        }
+
+        // streak badges
+        const streak = profile?.streak_current ?? 0;
+        if (streak >= 3)  award('streak_3');
+        if (streak >= 7)  award('streak_7');
+        if (streak >= 30) award('streak_30');
+
+        // insert all new badges
+        if (toAward.length > 0) {
+            await db.from('student_badges').insert(
+                toAward.map(key => ({ student_id: userId, badge_key: key }))
+            );
+        }
+    } catch (e) {
+        // badge failures should never break the level completion flow
+        console.error('badge check failed:', e.message);
+    }
 }
 
 // logs an AIDE hint interaction to the aide_interactions table
