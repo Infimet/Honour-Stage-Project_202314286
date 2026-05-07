@@ -528,13 +528,11 @@ body {
 .right-column {
     display: flex;
     flex-direction: column;
-    align-items: stretch;
+    align-items: center;
     justify-content: flex-start;
     min-width: 0;
     overflow: hidden;
-    padding: 0;
-    background: transparent;
-    box-shadow: none;
+    padding: 18px 8px;
 }
 
 /* column headings use a subtle green pill to tie into the design language */
@@ -571,14 +569,13 @@ body {
 }
 
 #robotCanvas {
-    border: none;
-    border-radius: var(--radius-lg);
+    border: 2px solid var(--colour-border);
     background-color: var(--colour-white);
-    box-shadow: var(--shadow-sm);
-    width: 100%;
-    height: 100%;
+    border-radius: var(--radius-md);
+    max-width: 100%;
+    max-height: calc(100vh - 120px);
     aspect-ratio: 1;
-    max-height: calc(100vh - 80px);
+    width: 100%;
     object-fit: contain;
     display: block;
 }
