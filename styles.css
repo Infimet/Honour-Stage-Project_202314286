@@ -528,10 +528,13 @@ body {
 .right-column {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     justify-content: flex-start;
     min-width: 0;
     overflow: hidden;
+    padding: 0;
+    background: transparent;
+    box-shadow: none;
 }
 
 /* column headings use a subtle green pill to tie into the design language */
@@ -568,14 +571,16 @@ body {
 }
 
 #robotCanvas {
-    border: 2px solid var(--colour-border);
+    border: none;
+    border-radius: var(--radius-lg);
     background-color: var(--colour-white);
-    border-radius: var(--radius-md);
-    max-width: 100%;
-    max-height: calc(100vh - 160px);
-    aspect-ratio: 1;
+    box-shadow: var(--shadow-sm);
     width: 100%;
+    height: 100%;
+    aspect-ratio: 1;
+    max-height: calc(100vh - 80px);
     object-fit: contain;
+    display: block;
 }
 
 /* canvas flash overlay - slow fade to black then back, with a hold at peak
