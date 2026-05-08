@@ -1288,6 +1288,95 @@ body {
 .badge-toast-label { font-size: 11px; font-weight: 600; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.05em; }
 .badge-toast-title { font-size: 15px; font-weight: 800; }
 
+/* --- welcome modal (onboarding) --- */
+.welcome-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(26, 26, 46, 0.6);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+}
+
+.welcome-modal.hidden { display: none; }
+
+.welcome-modal-content {
+    background: white;
+    border-radius: 20px;
+    padding: 36px 32px 28px;
+    max-width: 380px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.welcome-dots {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 24px;
+}
+
+.welcome-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--colour-border);
+    transition: background 0.25s ease, transform 0.25s ease;
+}
+
+.welcome-dot--active {
+    background: var(--colour-green);
+    transform: scale(1.25);
+}
+
+.welcome-slide { display: none; flex-direction: column; align-items: center; }
+.welcome-slide--active { display: flex; }
+.welcome-mio { margin-bottom: 18px; }
+
+.welcome-heading {
+    font-family: var(--font-main);
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--colour-text);
+    margin-bottom: 10px;
+}
+
+.welcome-body {
+    font-family: var(--font-main);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--colour-text-muted);
+    line-height: 1.6;
+    margin-bottom: 28px;
+}
+
+.welcome-body strong { color: var(--colour-text); }
+
+.welcome-next-btn {
+    background: var(--colour-green);
+    color: white;
+    border: none;
+    border-radius: 30px;
+    padding: 13px 36px;
+    font-family: var(--font-main);
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.15s ease;
+    width: 100%;
+    margin-top: 4px;
+}
+
+.welcome-next-btn:hover  { background: var(--colour-green-dk); }
+.welcome-next-btn:active { transform: scale(0.97); }
+
 .auth-wrapper {
     min-height: 100vh;
     background-color: var(--colour-bg);

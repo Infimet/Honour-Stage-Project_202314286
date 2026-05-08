@@ -357,6 +357,96 @@
          (UX research brief 2026; Bishop et al. 2015 — functional SFX on by default) -->
     <button id="muteBtn" class="mute-btn" aria-label="Toggle sound" title="Toggle sound">🔊</button>
 
+    <!-- welcome modal - shown once to new students only
+         ref: gapsy studio (2026) show don't tell principle
+         ref: vygotsky (1978) - scaffolded introduction before independent work -->
+    <div id="welcomeModal" class="welcome-modal hidden" role="dialog" aria-modal="true" aria-label="Welcome to MioCode">
+        <div class="welcome-modal-content">
+
+            <div class="welcome-dots" aria-hidden="true">
+                <span class="welcome-dot welcome-dot--active"></span>
+                <span class="welcome-dot"></span>
+                <span class="welcome-dot"></span>
+            </div>
+
+            <!-- slide 1: welcome - neutral mio -->
+            <div class="welcome-slide welcome-slide--active">
+                <svg class="welcome-mio" width="90" height="116" viewBox="0 0 100 130" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="17" cy="38" rx="9" ry="12" fill="#ECEEF4"/><ellipse cx="83" cy="38" rx="9" ry="12" fill="#ECEEF4"/>
+                    <ellipse cx="50" cy="44" rx="34" ry="30" fill="#ECEEF4"/>
+                    <rect x="17" y="66" width="66" height="44" rx="20" fill="#ECEEF4"/><rect x="17" y="95" width="66" height="15" rx="20" fill="#E0E3EC"/>
+                    <rect x="22" y="107" width="22" height="13" rx="6" fill="#F5A623"/><rect x="56" y="107" width="22" height="13" rx="6" fill="#F5A623"/>
+                    <rect x="18" y="30" width="64" height="28" rx="14" fill="#F5A623"/>
+                    <circle cx="36" cy="44" r="9" fill="#1A1A2E"/><circle cx="36" cy="44" r="6" fill="#FFD060"/><circle cx="36" cy="44" r="3" fill="#FFE590"/>
+                    <ellipse cx="32" cy="40" rx="2.5" ry="1.8" fill="white" opacity="0.6" transform="rotate(-20 32 40)"/>
+                    <circle cx="64" cy="44" r="9" fill="#1A1A2E"/><circle cx="64" cy="44" r="6" fill="#FFD060"/><circle cx="64" cy="44" r="3" fill="#FFE590"/>
+                    <ellipse cx="60" cy="40" rx="2.5" ry="1.8" fill="white" opacity="0.6" transform="rotate(-20 60 40)"/>
+                    <rect x="18" y="30" width="30" height="13" fill="#F5A623"/>
+                    <ellipse cx="36" cy="43" rx="15" ry="5" fill="#F5A623"/>
+                    <rect x="52" y="30" width="30" height="13" fill="#F5A623"/>
+                    <ellipse cx="64" cy="43" rx="15" ry="5" fill="#F5A623"/>
+                    <line x1="50" y1="14" x2="50" y2="30" stroke="#C8CBD8" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="50" cy="8" r="8" fill="#3DAA6E"/><circle cx="46" cy="4" r="3" fill="#5DC98A"/>
+                </svg>
+                <h2 class="welcome-heading">Welcome to MioCode!</h2>
+                <p class="welcome-body">You're going to learn to code by programming your very own robot. No experience needed — let's start from the beginning.</p>
+            </div>
+
+            <!-- slide 2: how it works - thinking mio (> ~) -->
+            <div class="welcome-slide">
+                <svg class="welcome-mio" width="90" height="116" viewBox="0 0 100 130" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="17" cy="38" rx="9" ry="12" fill="#ECEEF4"/><ellipse cx="83" cy="38" rx="9" ry="12" fill="#ECEEF4"/>
+                    <ellipse cx="50" cy="44" rx="34" ry="30" fill="#ECEEF4"/>
+                    <rect x="17" y="66" width="66" height="44" rx="20" fill="#ECEEF4"/><rect x="17" y="95" width="66" height="15" rx="20" fill="#E0E3EC"/>
+                    <rect x="22" y="107" width="22" height="13" rx="6" fill="#F5A623"/><rect x="56" y="107" width="22" height="13" rx="6" fill="#F5A623"/>
+                    <rect x="18" y="30" width="64" height="28" rx="14" fill="#F5A623"/>
+                    <!-- left eye > with lid -->
+                    <circle cx="36" cy="44" r="9" fill="#1A1A2E"/>
+                    <path d="M27,37 L45,44 L27,51" fill="none" stroke="#FFD060" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <rect x="18" y="30" width="30" height="18" fill="#F5A623"/>
+                    <ellipse cx="36" cy="48" rx="15" ry="6" fill="#F5A623"/>
+                    <!-- right eye ~ no lid -->
+                    <circle cx="64" cy="44" r="9" fill="#1A1A2E"/>
+                    <path d="M55,44 Q60,37 64,44 Q68,51 73,44" fill="none" stroke="#FFD060" stroke-width="4" stroke-linecap="round"/>
+                    <rect x="52" y="30" width="30" height="11" fill="#F5A623"/>
+                    <ellipse cx="64" cy="41" rx="15" ry="5" fill="#F5A623"/>
+                    <line x1="50" y1="14" x2="50" y2="30" stroke="#C8CBD8" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="50" cy="8" r="8" fill="#3DAA6E"/><circle cx="46" cy="4" r="3" fill="#5DC98A"/>
+                </svg>
+                <h2 class="welcome-heading">How does it work?</h2>
+                <p class="welcome-body">Drag blocks from the left panel into the workspace to give Mio instructions. When you're ready, press <strong>Run</strong> and watch what happens!</p>
+            </div>
+
+            <!-- slide 3: rewards - celebrating mio (★ ★) -->
+            <div class="welcome-slide">
+                <svg class="welcome-mio" width="90" height="116" viewBox="0 0 100 130" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                    <ellipse cx="17" cy="38" rx="9" ry="12" fill="#ECEEF4"/><ellipse cx="83" cy="38" rx="9" ry="12" fill="#ECEEF4"/>
+                    <ellipse cx="50" cy="44" rx="34" ry="30" fill="#ECEEF4"/>
+                    <ellipse cx="14" cy="62" rx="14" ry="9" fill="#ECEEF4" transform="rotate(-55 14 62)"/>
+                    <ellipse cx="4" cy="44" rx="9" ry="7" fill="#F5A623" transform="rotate(-50 4 44)"/>
+                    <ellipse cx="86" cy="62" rx="14" ry="9" fill="#ECEEF4" transform="rotate(55 86 62)"/>
+                    <ellipse cx="96" cy="44" rx="9" ry="7" fill="#F5A623" transform="rotate(50 96 44)"/>
+                    <rect x="17" y="66" width="66" height="44" rx="20" fill="#ECEEF4"/><rect x="17" y="95" width="66" height="15" rx="20" fill="#E0E3EC"/>
+                    <rect x="22" y="107" width="22" height="13" rx="6" fill="#F5A623"/><rect x="56" y="107" width="22" height="13" rx="6" fill="#F5A623"/>
+                    <rect x="18" y="30" width="64" height="28" rx="14" fill="#F5A623"/>
+                    <circle cx="36" cy="44" r="9" fill="#1A1A2E"/>
+                    <polygon points="36,35 38.5,41 45,41 40,45 42,52 36,48 30,52 32,45 27,41 33.5,41" fill="#FFD060"/>
+                    <circle cx="64" cy="44" r="9" fill="#1A1A2E"/>
+                    <polygon points="64,35 66.5,41 73,41 68,45 70,52 64,48 58,52 60,45 55,41 61.5,41" fill="#FFD060"/>
+                    <circle cx="12" cy="18" r="3" fill="#F5A623" opacity="0.9"/>
+                    <circle cx="88" cy="18" r="3" fill="#F5A623" opacity="0.9"/>
+                    <line x1="50" y1="14" x2="50" y2="30" stroke="#C8CBD8" stroke-width="4" stroke-linecap="round"/>
+                    <circle cx="50" cy="8" r="8" fill="#3DAA6E"/><circle cx="46" cy="4" r="3" fill="#5DC98A"/>
+                </svg>
+                <h2 class="welcome-heading">Earn rewards!</h2>
+                <p class="welcome-body">Solve levels to earn stars and badges. Build your daily streak and see how you rank against your classmates. Good luck!</p>
+            </div>
+
+            <button class="welcome-next-btn" id="welcomeNextBtn">Next →</button>
+
+        </div>
+    </div>
+
     <!-- scripts - order matters -->
     <script src="supabase.js"></script>
     <script src="sound.js"></script>

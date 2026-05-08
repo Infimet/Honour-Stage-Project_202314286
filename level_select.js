@@ -128,29 +128,23 @@ function updateFooterStats(progressRows) {
 // runs a brief full-screen transition between the two screens
 // builds anticipation and signals a clear context change (Mayer & Moreno 2003)
 function launchLevel(level) {
-    const transition   = document.getElementById('levelTransition');
-    const titleEl      = document.getElementById('transitionTitle');
-    const levelSelect  = document.getElementById('levelSelectScreen');
+    const transition    = document.getElementById('levelTransition');
+    const titleEl       = document.getElementById('transitionTitle');
+    const levelSelect   = document.getElementById('levelSelectScreen');
     const gameContainer = document.getElementById('gameContainer');
 
-    // set the level title in the transition screen before showing it
     titleEl.textContent = level.title ?? '';
 
-    // phase 1: fade in the transition overlay (0.25s)
     transition.classList.remove('hidden', 'leaving');
     transition.classList.add('entering');
 
-    // phase 2: after overlay is fully visible, prepare the game screen behind it
-    setTimeout(() => {
+    setTimeout(async () => {
         transition.classList.remove('entering');
 
         levelSelect.classList.add('hidden');
         gameContainer.classList.remove('hidden');
 
-        // clear any blocks left over from a previous level session
         if (typeof workspace !== 'undefined' && workspace) workspace.clear();
-
-        // blockly resize fix - container was hidden so workspace has zero dimensions
         if (typeof workspace !== 'undefined' && workspace) Blockly.svgResize(workspace);
 
         if (typeof updateToolboxForCategory === 'function') updateToolboxForCategory(level.category);
@@ -160,17 +154,35 @@ function launchLevel(level) {
         window.robotInstance.loadLevelFromDb(level);
         window.activeLevel = level;
 
+        // proactive aide intro on level 1, first visit only
+        // demonstrates the ITS pattern: scaffolding before failure, not just after
+        // ref: vygotsky (1978) zone of proximal development - guidance before the student reaches their limit
+        if (level.id === 1) {
+            const session = await db.auth.getSession();
+            const userId  = session?.data?.session?.user?.id;
+            if (userId) {
+                const seenKey = 'miocode_l1intro_' + userId;
+                if (!localStorage.getItem(seenKey)) {
+                    // delay until after the transition overlay clears (~900ms total)
+                    setTimeout(() => {
+                        const aideBody = document.getElementById('aideBody');
+                        if (aideBody) {
+                            aideBody.innerHTML = `<p class="aide-hint">Hi! 👋 Your goal is to move Mio to the green circle. Try dragging a <strong>Move Forward</strong> block into your workspace and pressing Run — I'll be here if you get stuck!</p>`;
+                        }
+                    }, 700);
+                    localStorage.setItem(seenKey, 'true');
+                }
+            }
+        }
+
     }, 300);
 
-    // phase 3: hold for child to read the level title, then fade out (total ~1.2s)
     setTimeout(() => {
         transition.classList.add('leaving');
-
         transition.addEventListener('animationend', () => {
             transition.classList.add('hidden');
             transition.classList.remove('leaving');
         }, { once: true });
-
     }, 900);
 }
 
@@ -259,6 +271,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     populateStatsStrip();
     renderBadges();
     renderClassLeaderboard();
+    checkAndShowOnboarding();
 });
 
 // shows a small join class banner at the top if student hasn't joined a class
@@ -372,6 +385,63 @@ async function renderClassLeaderboard() {
             `).join('')}
         </div>
     `;
+}
+
+// --- onboarding ---
+
+// checks if the student is new and shows the welcome modal if so
+// detection: localStorage flag per user (handles repeat visits) +
+// zero completed progress rows in db (handles new devices/cleared storage)
+async function checkAndShowOnboarding() {
+    const session = await db.auth.getSession();
+    const userId  = session?.data?.session?.user?.id;
+    if (!userId) return;
+
+    const storageKey = 'miocode_onboarded_' + userId;
+    if (localStorage.getItem(storageKey)) return;
+
+    // check db - if they have any completed levels they're not really new
+    const { data: progress } = await db.from('student_progress')
+        .select('id')
+        .eq('student_id', userId)
+        .eq('completed', true)
+        .limit(1);
+
+    if (progress && progress.length > 0) {
+        // existing student on a new device - just set the flag and skip the tour
+        localStorage.setItem(storageKey, 'true');
+        return;
+    }
+
+    showWelcomeModal(storageKey);
+}
+
+function showWelcomeModal(storageKey) {
+    const modal = document.getElementById('welcomeModal');
+    if (!modal) return;
+
+    modal.classList.remove('hidden');
+
+    let current = 0;
+    const slides  = modal.querySelectorAll('.welcome-slide');
+    const dots    = modal.querySelectorAll('.welcome-dot');
+    const nextBtn = document.getElementById('welcomeNextBtn');
+
+    function goTo(i) {
+        slides.forEach((s, idx) => s.classList.toggle('welcome-slide--active', idx === i));
+        dots.forEach((d, idx)   => d.classList.toggle('welcome-dot--active',  idx === i));
+        nextBtn.textContent = i === slides.length - 1 ? "Let's go! 🚀" : 'Next →';
+    }
+
+    nextBtn.addEventListener('click', () => {
+        if (current < slides.length - 1) {
+            current++;
+            goTo(current);
+        } else {
+            modal.classList.add('hidden');
+            localStorage.setItem(storageKey, 'true');
+        }
+    });
 }
 
 // sign out button
