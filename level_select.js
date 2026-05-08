@@ -9,10 +9,17 @@ const DIFFICULTY_LABELS = {
 };
 
 // builds a single card element from a level row
-// isLocked: true if the previous level in the category hasn't been completed yet
 function buildLevelCard(level, progress, isLocked) {
     const card = document.createElement('div');
-    card.className = isLocked ? 'ls-card ls-card--locked' : 'ls-card';
+    const stars     = progress?.stars_earned ?? 0;
+    const hints     = progress?.hints_used   ?? 0;
+    const completed = progress?.completed === true;
+
+    let cardClass = 'ls-card';
+    if (isLocked)         cardClass += ' ls-card--locked';
+    else if (completed)   cardClass += stars === 3 ? ' ls-card--perfect' : ' ls-card--done';
+
+    card.className = cardClass;
 
     if (isLocked) {
         card.innerHTML = `
@@ -23,17 +30,25 @@ function buildLevelCard(level, progress, isLocked) {
         return card;
     }
 
+    const hintsHtml = completed && hints === 0
+        ? `<span class="ls-card-hints ls-card-hints--clean">✨ No hints!</span>`
+        : completed && hints > 0
+            ? `<span class="ls-card-hints">💡 ${hints} hint${hints !== 1 ? 's' : ''}</span>`
+            : '';
+
     card.innerHTML = `
         <div class="ls-card-badge">${DIFFICULTY_LABELS[level.difficulty] ?? 'Level ' + level.difficulty}</div>
         <div class="ls-card-title">${level.title}</div>
         <div class="ls-card-desc">${level.description ?? ''}</div>
-        <div class="ls-card-stars">
-            ${[1, 2, 3].map(n => `<span class="ls-star ${n <= (progress?.stars_earned ?? 0) ? 'ls-star--earned' : ''}">★</span>`).join('')}
+        <div class="ls-card-footer">
+            <div class="ls-card-stars">
+                ${[1, 2, 3].map(n => `<span class="ls-star ${n <= stars ? 'ls-star--earned' : ''}">★</span>`).join('')}
+            </div>
+            ${hintsHtml}
         </div>
     `;
 
     card.addEventListener('click', () => launchLevel(level));
-
     return card;
 }
 
@@ -74,13 +89,39 @@ async function renderLevelSelect(category = 'basics') {
     updateFooterStats(progressRows);
 }
 
-// updates the footer stat counters
+// populates the student stats strip with live data from supabase
+async function populateStatsStrip() {
+    try {
+        const user = (await db.auth.getSession())?.data?.session?.user;
+        if (!user) return;
+
+        const [{ data: profile }, { data: progress }, { data: badges }] = await Promise.all([
+            db.from('profiles').select('total_stars, streak_current').eq('id', user.id).maybeSingle(),
+            db.from('student_progress').select('completed').eq('student_id', user.id).eq('completed', true),
+            db.from('student_badges').select('badge_key').eq('student_id', user.id)
+        ]);
+
+        const el = id => document.getElementById(id);
+        if (el('statTotalStars'))  el('statTotalStars').textContent  = profile?.total_stars    ?? 0;
+        if (el('statStreak'))      el('statStreak').textContent      = profile?.streak_current  ?? 0;
+        if (el('statLevelsDone'))  el('statLevelsDone').textContent  = progress?.length         ?? 0;
+        if (el('statBadges'))      el('statBadges').textContent      = badges?.length           ?? 0;
+
+        // also keep old ids working if referenced elsewhere
+        if (el('lsTotalStars'))    el('lsTotalStars').textContent    = profile?.total_stars    ?? 0;
+        if (el('lsCompletedCount')) el('lsCompletedCount').textContent = progress?.length      ?? 0;
+    } catch (e) {
+        console.error('populateStatsStrip failed:', e.message);
+    }
+}
+
+// legacy - called by renderLevelSelect, now just a no-op since stats are populated separately
 function updateFooterStats(progressRows) {
     const completed  = progressRows.filter(r => r.completed).length;
     const totalStars = progressRows.reduce((sum, r) => sum + (r.stars_earned ?? 0), 0);
-
-    document.getElementById('lsTotalStars').textContent  = totalStars;
-    document.getElementById('lsCompletedCount').textContent = completed;
+    const el = id => document.getElementById(id);
+    if (el('lsTotalStars'))     el('lsTotalStars').textContent     = totalStars;
+    if (el('lsCompletedCount')) el('lsCompletedCount').textContent = completed;
 }
 
 // hides level select and launches the chosen level
@@ -215,6 +256,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     refreshCategoryTabs();
     populateGreeting();
     populateCategoryProgress();
+    populateStatsStrip();
 });
 
 // shows a small join class banner at the top if student hasn't joined a class

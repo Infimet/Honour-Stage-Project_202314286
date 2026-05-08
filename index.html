@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NAG-25-953</title>
+    <title>MioCode</title>
     <script src="https://unpkg.com/blockly/blockly.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -27,9 +27,9 @@
                 <div class="ls-header-left">
                     <div class="ls-logo">
                         <span class="ls-logo-icon">🤖</span>
-                        <span class="ls-logo-text">NAG-25-953</span>
+                        <span class="ls-logo-text">Mio<span class="ls-logo-code">Code</span></span>
                     </div>
-                    <p class="ls-tagline">Honour-Stage-Project_202314286</p>
+                    <p class="ls-tagline">Learn to code with your robot 🤖</p>
                 </div>
                 <button id="signOutBtn" class="sign-out-btn">Sign Out</button>
             </header>
@@ -38,6 +38,30 @@
             <div class="ls-greeting">
                 <h1 class="ls-greeting-text" id="lsGreeting">Welcome back!</h1>
                 <p class="ls-section-sub">Complete each category to unlock the next one.</p>
+            </div>
+
+            <!-- student stats strip - shown prominently above the level tabs -->
+            <div class="ls-stats-strip" id="lsStatsStrip">
+                <div class="ls-stat-chip ls-stat-chip--stars">
+                    <span class="ls-stat-chip-icon">⭐</span>
+                    <span class="ls-stat-chip-value" id="statTotalStars">—</span>
+                    <span class="ls-stat-chip-label">Stars</span>
+                </div>
+                <div class="ls-stat-chip ls-stat-chip--streak">
+                    <span class="ls-stat-chip-icon">🔥</span>
+                    <span class="ls-stat-chip-value" id="statStreak">—</span>
+                    <span class="ls-stat-chip-label">Day streak</span>
+                </div>
+                <div class="ls-stat-chip ls-stat-chip--levels">
+                    <span class="ls-stat-chip-icon">✅</span>
+                    <span class="ls-stat-chip-value" id="statLevelsDone">—</span>
+                    <span class="ls-stat-chip-label">Levels done</span>
+                </div>
+                <div class="ls-stat-chip ls-stat-chip--badges">
+                    <span class="ls-stat-chip-icon">🏅</span>
+                    <span class="ls-stat-chip-value" id="statBadges">—</span>
+                    <span class="ls-stat-chip-label">Badges</span>
+                </div>
             </div>
 
             <!-- join class banner - shown if student has no class_id -->
@@ -97,19 +121,6 @@
                 <div class="ls-skeleton" aria-hidden="true" style="animation-delay:.2s"></div>
                 <div class="ls-skeleton" aria-hidden="true" style="animation-delay:.3s"></div>
             </main>
-
-            <footer class="ls-footer">
-                <div class="ls-footer-stat">
-                    <span class="ls-footer-icon">⭐</span>
-                    <span class="ls-footer-value" id="lsTotalStars">—</span>
-                    <span class="ls-footer-label">Total Stars</span>
-                </div>
-                <div class="ls-footer-stat">
-                    <span class="ls-footer-icon">✅</span>
-                    <span class="ls-footer-value" id="lsCompletedCount">—</span>
-                    <span class="ls-footer-label">Levels Done</span>
-                </div>
-            </footer>
 
         </div>
     </div>

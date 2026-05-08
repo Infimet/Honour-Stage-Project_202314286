@@ -119,9 +119,15 @@ body {
 
 .ls-logo-text {
     font-size: 2rem;
-    font-weight: 800;
+    font-weight: 900;
+    color: var(--colour-text);
+    letter-spacing: -0.03em;
+}
+
+/* "Code" in the MioCode logo renders in green — same pattern as Duolingo's
+   two-tone wordmark. Mio = dark (the character), Code = green (the action) */
+.ls-logo-code {
     color: var(--colour-green);
-    letter-spacing: -0.02em;
 }
 
 .ls-tagline {
@@ -428,43 +434,86 @@ body {
     box-shadow: var(--shadow-sm);
 }
 
-/* --- stats footer --- */
-
-.ls-footer {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
+/* completed card - green top border, subtle tint */
+.ls-card--done {
+    border-top-color: var(--colour-green);
+    background: linear-gradient(180deg, rgba(61,170,110,0.04) 0%, var(--colour-surface) 60%);
 }
 
-.ls-footer-stat {
+/* perfect card - full 3 stars, more celebratory */
+.ls-card--perfect {
+    border-top-color: var(--colour-amber);
+    background: linear-gradient(180deg, rgba(245,166,35,0.06) 0%, var(--colour-surface) 60%);
+}
+
+/* card footer row: stars + hints side by side */
+.ls-card-footer {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+    gap: 8px;
+}
+
+/* hints indicator on completed cards */
+.ls-card-hints {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--colour-text-muted);
+    white-space: nowrap;
+}
+
+.ls-card-hints--clean {
+    color: var(--colour-green);
+}
+
+/* --- stats strip --- */
+
+.ls-stats-strip {
+    display: flex;
     gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.ls-stat-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     background: var(--colour-surface);
-    border-radius: var(--radius-md);
-    padding: 12px 20px;
-    box-shadow: var(--shadow-sm);
     border: 1.5px solid var(--colour-border);
+    border-radius: var(--radius-md);
+    padding: 10px 16px;
+    box-shadow: var(--shadow-sm);
+    flex: 1;
+    min-width: 100px;
 }
 
-.ls-footer-icon {
+.ls-stat-chip-icon {
     font-size: 1.2rem;
-}
-
-.ls-footer-value {
-    font-size: 1.4rem;
-    font-weight: 800;
-    color: var(--colour-text);
     line-height: 1;
 }
 
-.ls-footer-label {
+.ls-stat-chip-value {
+    font-size: 1.5rem;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.02em;
+}
+
+.ls-stat-chip-label {
     font-size: 11px;
     font-weight: 800;
-    color: var(--colour-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.06em;
+    color: var(--colour-text-muted);
+    line-height: 1.2;
 }
+
+.ls-stat-chip--stars  .ls-stat-chip-value { color: var(--colour-amber); }
+.ls-stat-chip--streak .ls-stat-chip-value { color: #E86A30; }
+.ls-stat-chip--levels .ls-stat-chip-value { color: var(--colour-green); }
+.ls-stat-chip--badges .ls-stat-chip-value { color: var(--colour-blue); }
 
 /* --- sign out button --- */
 
