@@ -10,13 +10,17 @@ class SoundManager {
         this.muted = localStorage.getItem('miocode_muted') === 'true';
     }
 
-    // audiocontext is created lazily on first use
-    // browsers require creation inside a user gesture - this defers until then
-    _getCtx() {
+    // audiocontext created lazily on first call inside a user gesture
+    async _getCtx() {
         if (!this._ctx) {
             this._ctx = new (window.AudioContext || window.webkitAudioContext)();
         }
-        if (this._ctx.state === 'suspended') this._ctx.resume();
+        // resume() is async - we must await it before reading currentTime
+        // if we don't, currentTime is still 0 while suspended and sounds
+        // get scheduled in the past and silently dropped by the browser
+        if (this._ctx.state !== 'running') {
+            await this._ctx.resume();
+        }
         return this._ctx;
     }
 
@@ -26,12 +30,10 @@ class SoundManager {
         return this.muted;
     }
 
-    // core tone helper
-    // freq: starting frequency (hz), dur: duration (seconds)
-    // options: type, vol, delay, freqEnd (for pitch bends)
-    _tone(freq, dur, { type = 'sine', vol = 0.25, delay = 0, freqEnd = null } = {}) {
+    // core tone helper - async so we can await the context resume
+    async _tone(freq, dur, { type = 'sine', vol = 0.25, delay = 0, freqEnd = null } = {}) {
         if (this.muted) return;
-        const ctx = this._getCtx();
+        const ctx = await this._getCtx();
         const t   = ctx.currentTime + delay;
 
         const osc  = ctx.createOscillator();
@@ -100,7 +102,7 @@ class SoundManager {
         ];
         notes.forEach(({ freq, dur, delay }) => {
             this._tone(freq,     dur, { vol: 0.20, delay });
-            this._tone(freq / 2, dur, { vol: 0.06, delay }); // octave below for warmth
+            this._tone(freq / 2, dur, { vol: 0.06, delay });
         });
     }
 }
