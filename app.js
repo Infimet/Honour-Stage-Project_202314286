@@ -239,6 +239,16 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('retryBtn').addEventListener('click', retryLevel);
     document.getElementById('backToMenuBtn').addEventListener('click', returnToLevelSelect);
     document.getElementById('backButton').addEventListener('click', returnToLevelSelect);
+
+    // mute button — syncs initial icon with persisted state, then toggles on click
+    const muteBtn = document.getElementById('muteBtn');
+    if (muteBtn) {
+        muteBtn.textContent = window.soundManager?.muted ? '🔇' : '🔊';
+        muteBtn.addEventListener('click', () => {
+            const muted = window.soundManager?.toggle();
+            muteBtn.textContent = muted ? '🔇' : '🔊';
+        });
+    }
 });
 
 // canvas flash + try-again toast - triggered on failure only, not every run
@@ -287,6 +297,9 @@ function runCode() {
     hideErrorBanner();
     _lastBlockId = null;
 
+    // sound: ascending arpeggio on run
+    if (window.soundManager) window.soundManager.runStart();
+
     // reset silently before each run - student focuses on the code,
     // not on tracking where the robot ended up (Lightbot/Code.org standard)
     window.robotInstance.reset();
@@ -313,12 +326,16 @@ function runCode() {
             try { Blockly.dropDownDiv.hide(); } catch (e) {}
 
             document.getElementById('winModal').classList.remove('hidden');
+            // slight delay so the fanfare doesn't overlap with the run arpeggio on fast completions
+            setTimeout(() => { if (window.soundManager) window.soundManager.win(); }, 180);
         } else {
             // pause so the student can see where the robot ended up before the reset
             // this is the moment of understanding - seeing the final position
             // is what tells them what went wrong (Hattie 2009: immediate feedback
             // must be legible, not just fast)
             setTimeout(() => {
+                // error sound fires when the flash starts
+                if (window.soundManager) window.soundManager.error();
                 flashAndReset(() => {
                     showErrorBanner("Hmm, not quite! Check your blocks and try again. 🤔");
                     // request a pedagogical hint from the AIDE after the reset lands
@@ -522,7 +539,11 @@ function showWinStars(stars) {
 
     const starEls = container.querySelectorAll('.win-star');
     starEls.forEach((el, i) => {
-        setTimeout(() => el.classList.add('win-star--animate'), i * 150);
+        setTimeout(() => {
+            el.classList.add('win-star--animate');
+            // sound only for earned stars, staggered to sync with the visual pop-in
+            if (window.soundManager && i < stars) window.soundManager.starEarn(i);
+        }, i * 150);
     });
 
     setTimeout(() => spawnConfetti(), stars * 150 + 100);

@@ -1177,8 +1177,10 @@ body {
     margin-bottom: 6px;
 }
 
-.auth-logo-icon {
-    font-size: 2rem;
+.auth-logo-mio {
+    display: inline-block;
+    flex-shrink: 0;
+    animation: mio-bob 2.8s ease-in-out infinite;
 }
 
 .auth-title {

@@ -72,6 +72,9 @@
             gap: 16px;
         }
         .topbar-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
             font-size: 20px;
             font-weight: 900;
             color: #fff;
@@ -481,7 +484,34 @@
 
     <!-- topbar -->
     <header class="topbar">
-        <div class="topbar-logo">🤖 Mio<span>Code</span></div>
+        <div class="topbar-logo">
+            <svg width="32" height="42" viewBox="0 0 100 130" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="17" cy="38" rx="9" ry="12" fill="#ECEEF4"/>
+                <ellipse cx="83" cy="38" rx="9" ry="12" fill="#ECEEF4"/>
+                <ellipse cx="50" cy="44" rx="34" ry="30" fill="#ECEEF4"/>
+                <rect x="17" y="66" width="66" height="44" rx="20" fill="#ECEEF4"/>
+                <rect x="17" y="95" width="66" height="15" rx="20" fill="#E0E3EC"/>
+                <rect x="22" y="107" width="22" height="13" rx="6" fill="#F5A623"/>
+                <rect x="56" y="107" width="22" height="13" rx="6" fill="#F5A623"/>
+                <rect x="18" y="30" width="64" height="28" rx="14" fill="#F5A623"/>
+                <circle cx="36" cy="44" r="9" fill="#1A1A2E"/>
+                <circle cx="36" cy="44" r="6" fill="#FFD060"/>
+                <circle cx="36" cy="44" r="3" fill="#FFE590"/>
+                <ellipse cx="32" cy="40" rx="2.5" ry="1.8" fill="white" opacity="0.6" transform="rotate(-20 32 40)"/>
+                <circle cx="64" cy="44" r="9" fill="#1A1A2E"/>
+                <circle cx="64" cy="44" r="6" fill="#FFD060"/>
+                <circle cx="64" cy="44" r="3" fill="#FFE590"/>
+                <ellipse cx="60" cy="40" rx="2.5" ry="1.8" fill="white" opacity="0.6" transform="rotate(-20 60 40)"/>
+                <rect x="18" y="30" width="30" fill="#F5A623"><animate attributeName="height" values="12;12;38;12;12" keyTimes="0;0.8;0.88;0.96;1" dur="3.8s" repeatCount="indefinite"/></rect>
+                <ellipse cx="36" rx="15" ry="5" fill="#F5A623"><animate attributeName="cy" values="42;42;68;42;42" keyTimes="0;0.8;0.88;0.96;1" dur="3.8s" repeatCount="indefinite"/></ellipse>
+                <rect x="52" y="30" width="30" fill="#F5A623"><animate attributeName="height" values="12;12;38;12;12" keyTimes="0;0.8;0.88;0.96;1" dur="3.8s" begin="0.07s" repeatCount="indefinite"/></rect>
+                <ellipse cx="64" rx="15" ry="5" fill="#F5A623"><animate attributeName="cy" values="42;42;68;42;42" keyTimes="0;0.8;0.88;0.96;1" dur="3.8s" begin="0.07s" repeatCount="indefinite"/></ellipse>
+                <line x1="50" y1="14" x2="50" y2="30" stroke="#C8CBD8" stroke-width="4" stroke-linecap="round"/>
+                <circle cx="50" cy="8" r="8" fill="#3DAA6E"/>
+                <circle cx="46" cy="4" r="3" fill="#5DC98A"/>
+            </svg>
+            Mio<span>Code</span>
+        </div>
         <div class="topbar-spacer"></div>
         <div class="topbar-teacher">Signed in as <strong id="teacherName">Teacher</strong></div>
         <button class="btn-signout" onclick="signOut()">Sign Out</button>

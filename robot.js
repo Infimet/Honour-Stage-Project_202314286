@@ -361,6 +361,12 @@ class Robot {
         const fromY     = this.y;
         const fromAngle = this.angle;
 
+        // sound fires at animation start - feels more immediate than firing on completion
+        if (window.soundManager) {
+            if (command.type === 'move') window.soundManager.step();
+            else if (command.type === 'turn') window.soundManager.turn();
+        }
+
         const step = (now) => {
             const t    = Math.min((now - startTime) / duration, 1);
             const ease = this._easeInOut(t);
@@ -403,6 +409,9 @@ class Robot {
         const fromY       = this.y;
         const nudgeX      = Math.cos(command.rad) * WOBBLE_DIST;
         const nudgeY      = Math.sin(command.rad) * WOBBLE_DIST;
+
+        // non-punitive audio - gentle, not a harsh buzzer
+        if (window.soundManager) window.soundManager.wallHit();
 
         const step = (now) => {
             const t = Math.min((now - startTime) / WOBBLE_MS, 1);
