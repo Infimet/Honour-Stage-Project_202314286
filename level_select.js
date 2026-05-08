@@ -257,6 +257,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     populateGreeting();
     populateCategoryProgress();
     populateStatsStrip();
+    renderBadges();
+    renderClassLeaderboard();
 });
 
 // shows a small join class banner at the top if student hasn't joined a class
@@ -319,6 +321,57 @@ async function populateCategoryProgress() {
         el.textContent = `${completed}/${total}`;
         if (completed === total && total > 0) el.classList.add('ls-tab-progress--done');
     });
+}
+
+// renders the earned badge showcase below the stats strip
+async function renderBadges() {
+    const container = document.getElementById('lsBadgeShowcase');
+    if (!container) return;
+
+    const badges = await fetchMyEarnedBadges();
+
+    if (!badges || badges.length === 0) {
+        container.innerHTML = '<p class="ls-badges-empty">Complete levels to earn badges!</p>';
+        return;
+    }
+
+    container.innerHTML = badges.map(b => `
+        <div class="ls-badge-chip" title="${b.title}">
+            <span class="ls-badge-chip-icon">${b.icon}</span>
+            <span class="ls-badge-chip-title">${b.title}</span>
+        </div>
+    `).join('');
+}
+
+// renders the class leaderboard below the level grid
+// only shown if the student has a class_id
+async function renderClassLeaderboard() {
+    const section = document.getElementById('classLeaderboard');
+    if (!section) return;
+
+    const { rows, myId } = await fetchClassLeaderboard();
+
+    if (!rows || rows.length === 0) {
+        section.classList.add('hidden');
+        return;
+    }
+
+    section.classList.remove('hidden');
+
+    const medals = ['🥇', '🥈', '🥉'];
+
+    section.innerHTML = `
+        <h2 class="ls-leaderboard-heading">Class Leaderboard</h2>
+        <div class="ls-leaderboard-list">
+            ${rows.map((row, i) => `
+                <div class="ls-leaderboard-row ${row.id === myId ? 'ls-leaderboard-row--me' : ''}">
+                    <span class="ls-leaderboard-rank">${medals[i] ?? i + 1}</span>
+                    <span class="ls-leaderboard-name">${row.display_name ?? 'Student'}${row.id === myId ? ' (you)' : ''}</span>
+                    <span class="ls-leaderboard-stars">⭐ ${row.total_stars ?? 0}</span>
+                </div>
+            `).join('')}
+        </div>
+    `;
 }
 
 // sign out button

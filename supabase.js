@@ -81,8 +81,9 @@ async function saveProgress(levelId, starsEarned) {
         await updateStreak(user.id);
     }
 
-    // check and award any badges earned by this completion
-    await checkAndAwardBadges(user.id, levelId);
+    // check and award any badges earned by this completion, return new ones for toast
+    const newBadges = await checkAndAwardBadges(user.id, levelId);
+    return newBadges;
 }
 
 // updates total_stars and streak fields on the profiles table after level completion
@@ -226,9 +227,12 @@ async function checkAndAwardBadges(userId, levelId) {
                 toAward.map(key => ({ student_id: userId, badge_key: key }))
             );
         }
+
+        return toAward; // return newly awarded keys so the caller can show notifications
     } catch (e) {
         // badge failures should never break the level completion flow
         console.error('badge check failed:', e.message);
+        return [];
     }
 }
 
@@ -340,4 +344,45 @@ async function fetchCategoryUnlockStatus() {
         obstacles:    allDone('loops'),
         conditionals: allDone('obstacles')
     };
+}
+
+// fetches class leaderboard for the student's current class
+// returns { rows: [{id, display_name, total_stars}], myId }
+// empty rows if the student hasn't joined a class yet
+async function fetchClassLeaderboard() {
+    const user = await getCurrentUser();
+    if (!user) return { rows: [], myId: null };
+
+    const { data: profile } = await db.from('profiles')
+        .select('class_id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+    if (!profile?.class_id) return { rows: [], myId: user.id };
+
+    const { data: rows } = await db.from('profiles')
+        .select('id, display_name, total_stars')
+        .eq('class_id', profile.class_id)
+        .eq('role', 'student')
+        .order('total_stars', { ascending: false });
+
+    return { rows: rows ?? [], myId: user.id };
+}
+
+// fetches all earned badges for the current student, joined with badge definitions
+async function fetchMyEarnedBadges() {
+    const user = await getCurrentUser();
+    if (!user) return [];
+
+    const [{ data: earned }, { data: defs }] = await Promise.all([
+        db.from('student_badges').select('badge_key, earned_at').eq('student_id', user.id),
+        db.from('badges').select('key, title, icon')
+    ]);
+
+    if (!earned || !defs) return [];
+
+    const defMap = Object.fromEntries(defs.map(d => [d.key, d]));
+    return earned
+        .map(e => ({ ...defMap[e.badge_key], earned_at: e.earned_at }))
+        .filter(b => b.key); // filter out any orphaned rows
 }

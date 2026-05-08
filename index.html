@@ -97,6 +97,14 @@
                 <button class="join-class-btn" onclick="joinClass()">Join</button>
             </div>
 
+            <!-- badge showcase - populated by renderBadges() on load -->
+            <div class="ls-badges-section" id="lsBadgesSection">
+                <h3 class="ls-badges-heading">My Badges</h3>
+                <div class="ls-badge-showcase" id="lsBadgeShowcase">
+                    <p class="ls-badges-empty">Complete levels to earn badges!</p>
+                </div>
+            </div>
+
             <h2 class="ls-category-heading">Choose a Level</h2>
 
             <nav class="ls-tabs" id="lsTabs" role="tablist" aria-label="Level categories">
@@ -146,6 +154,10 @@
                 <div class="ls-skeleton" aria-hidden="true" style="animation-delay:.2s"></div>
                 <div class="ls-skeleton" aria-hidden="true" style="animation-delay:.3s"></div>
             </main>
+
+            <!-- class leaderboard - only shown if student has a class_id -->
+            <!-- populated by renderClassLeaderboard() in level_select.js -->
+            <div class="ls-leaderboard hidden" id="classLeaderboard"></div>
 
         </div>
     </div>
@@ -339,6 +351,11 @@
         </div>
     </div>
 
+
+    <!-- mute button — fixed position, accessible from every screen.
+         Classroom essential: teachers need to silence audio instantly.
+         (UX research brief 2026; Bishop et al. 2015 — functional SFX on by default) -->
+    <button id="muteBtn" class="mute-btn" aria-label="Toggle sound" title="Toggle sound">🔊</button>
 
     <!-- scripts - order matters -->
     <script src="supabase.js"></script>

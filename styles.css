@@ -1148,7 +1148,145 @@ body {
 }
 
 
-/* --- auth / login page --- */
+/* --- mute button ---
+   Fixed position: accessible from every screen (level select + game).
+   Classroom essential — teachers need to silence instantly.
+   Backdrop-filter gives legibility on both light and dark backgrounds. */
+.mute-btn {
+    position: fixed;
+    top: 14px;
+    right: 16px;
+    z-index: 9999;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1.5px solid var(--colour-border);
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: var(--shadow-sm);
+    font-size: 17px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease, background 0.2s ease;
+}
+
+.mute-btn:hover  { background: rgba(255,255,255,1); transform: scale(1.1); }
+.mute-btn:active { transform: scale(0.93); }
+
+/* --- badge showcase --- */
+.ls-badges-section {
+    margin-bottom: 20px;
+}
+
+.ls-badges-heading {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--colour-text-muted);
+    margin-bottom: 10px;
+}
+
+.ls-badge-showcase {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ls-badges-empty {
+    font-size: 13px;
+    color: var(--colour-text-muted);
+}
+
+.ls-badge-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: white;
+    border: 1.5px solid var(--colour-border);
+    border-radius: 20px;
+    padding: 5px 12px 5px 8px;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.15s ease;
+}
+
+.ls-badge-chip:hover { transform: translateY(-2px); }
+
+.ls-badge-chip-icon  { font-size: 16px; line-height: 1; }
+.ls-badge-chip-title { font-size: 12px; font-weight: 700; color: var(--colour-text); }
+
+/* --- class leaderboard --- */
+.ls-leaderboard {
+    margin-top: 28px;
+    background: white;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.ls-leaderboard-heading {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--colour-text);
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid var(--colour-border);
+}
+
+.ls-leaderboard-list { padding: 8px 0; }
+
+.ls-leaderboard-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 18px;
+    font-size: 14px;
+    transition: background 0.15s;
+}
+
+.ls-leaderboard-row:hover { background: var(--colour-bg); }
+
+.ls-leaderboard-row--me {
+    background: var(--colour-green-lt);
+    font-weight: 700;
+}
+
+.ls-leaderboard-rank  { font-size: 18px; width: 28px; text-align: center; flex-shrink: 0; }
+.ls-leaderboard-name  { flex: 1; color: var(--colour-text); }
+.ls-leaderboard-stars { font-size: 13px; font-weight: 700; color: var(--colour-text-muted); }
+
+/* --- badge toast notification --- */
+.badge-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    opacity: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--colour-text);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 30px;
+    box-shadow: var(--shadow-lg);
+    z-index: 9998;
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.badge-toast--visible {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.badge-toast-icon  { font-size: 24px; line-height: 1; }
+.badge-toast-text  { display: flex; flex-direction: column; gap: 1px; }
+.badge-toast-label { font-size: 11px; font-weight: 600; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.05em; }
+.badge-toast-title { font-size: 15px; font-weight: 800; }
 
 .auth-wrapper {
     min-height: 100vh;

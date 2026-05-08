@@ -316,7 +316,14 @@ function runCode() {
         if (window.robotInstance.checkWin()) {
             const stars = calculateStars(blocksUsed, optimal);
 
-            if (window.activeLevel) await saveProgress(window.activeLevel.id, stars);
+            if (window.activeLevel) {
+                const newBadges = await saveProgress(window.activeLevel.id, stars) ?? [];
+                // show a toast for each newly earned badge after a short delay
+                // so it doesn't clash with the win modal animation
+                newBadges.forEach((key, i) => {
+                    setTimeout(() => showBadgeToast(key), 800 + i * 600);
+                });
+            }
             showWinStars(stars);
 
             // blockly appends floating widget divs (number inputs, dropdowns)
@@ -569,4 +576,46 @@ function spawnConfetti() {
 
         el.addEventListener('animationend', () => el.remove());
     }
+}
+
+// badge definitions lookup - mirrors the badges table so we don't need an extra db call
+// just for the toast notification
+const BADGE_DEFS = {
+    first_steps:          { title: 'First Steps',          icon: '🚀' },
+    speed_coder:          { title: 'Speed Coder',           icon: '⚡' },
+    perfect_run:          { title: 'Perfect Run',           icon: '⭐' },
+    no_hints_needed:      { title: 'No Hints Needed',       icon: '🧠' },
+    movement_master:      { title: 'Movement Master',       icon: '🏃' },
+    loop_legend:          { title: 'Loop Legend',           icon: '🔁' },
+    obstacle_overcomer:   { title: 'Obstacle Overcomer',    icon: '🧱' },
+    conditional_commander:{ title: 'Conditional Commander', icon: '🔀' },
+    curriculum_complete:  { title: 'Curriculum Complete',   icon: '🎓' },
+    streak_3:             { title: '3-Day Streak',          icon: '🔥' },
+    streak_7:             { title: '7-Day Streak',          icon: '🔥' },
+    streak_30:            { title: '30-Day Streak',         icon: '🔥' },
+};
+
+// shows a brief slide-in toast when a badge is earned
+function showBadgeToast(badgeKey) {
+    const def = BADGE_DEFS[badgeKey];
+    if (!def) return;
+
+    const toast = document.createElement('div');
+    toast.className = 'badge-toast';
+    toast.innerHTML = `
+        <span class="badge-toast-icon">${def.icon}</span>
+        <div class="badge-toast-text">
+            <span class="badge-toast-label">Badge earned!</span>
+            <span class="badge-toast-title">${def.title}</span>
+        </div>
+    `;
+    document.body.appendChild(toast);
+
+    // trigger animation after paint
+    requestAnimationFrame(() => toast.classList.add('badge-toast--visible'));
+
+    setTimeout(() => {
+        toast.classList.remove('badge-toast--visible');
+        toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+    }, 3000);
 }
