@@ -165,28 +165,72 @@ class Robot {
     }
 
     drawRobot() {
-        this.ctx.save();
-        this.ctx.translate(this.x, this.y);
-        this.ctx.rotate((this.angle * Math.PI) / 180);
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate((this.angle * Math.PI) / 180);
 
-        this.ctx.fillStyle = '#FF5722';
-        this.ctx.strokeStyle = '#D84315';
-        this.ctx.lineWidth = 2;
+        // Robot faces RIGHT at angle 0 — visor on right, antenna on left.
+        // The canvas rotation handles all other directions automatically.
+        const s = 13; // half-size of body
 
+        // ── body ─────────────────────────────────────────────────
+        ctx.fillStyle = '#ECEEF4';
+        ctx.strokeStyle = '#CDD0E3';
+        ctx.lineWidth = 1.5;
+        this._rrect(-s, -s, s * 2, s * 2, 6);
+        ctx.fill();
+        ctx.stroke();
+
+        // lower body slightly darker — single tone like the SVG
+        ctx.fillStyle = '#DEE0EF';
+        this._rrect(-s, 3, s * 2, s - 3, [0, 0, 6, 6]);
+        ctx.fill();
+
+        // ── visor — amber band on front (right side) ─────────────
+        ctx.fillStyle = '#F5A623';
+        this._rrect(2, -s + 2, s - 3, (s - 2) * 2, [0, 5, 5, 0]);
+        ctx.fill();
+
+        // ── upper LED hole ────────────────────────────────────────
+        ctx.fillStyle = '#1A1A2E';
+        ctx.beginPath(); ctx.arc(8, -5, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#FFD060';
+        ctx.beginPath(); ctx.arc(8, -5, 2.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.beginPath(); ctx.arc(6.5, -6.5, 1, 0, Math.PI * 2); ctx.fill();
+
+        // ── lower LED hole ────────────────────────────────────────
+        ctx.fillStyle = '#1A1A2E';
+        ctx.beginPath(); ctx.arc(8, 5, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#FFD060';
+        ctx.beginPath(); ctx.arc(8, 5, 2.5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.beginPath(); ctx.arc(6.5, 3.5, 1, 0, Math.PI * 2); ctx.fill();
+
+        // ── antenna ball on back ──────────────────────────────────
+        ctx.fillStyle = '#3DAA6E';
+        ctx.beginPath(); ctx.arc(-9, 0, 4, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#5DC98A';
+        ctx.beginPath(); ctx.arc(-10.5, -1.5, 1.5, 0, Math.PI * 2); ctx.fill();
+
+        ctx.restore();
+    }
+
+    // Rounded rectangle path helper (r can be a number or [tl, tr, br, bl] array)
+    _rrect(x, y, w, h, r) {
+        const [tl, tr, br, bl] = Array.isArray(r) ? r : [r, r, r, r];
         this.ctx.beginPath();
-        this.ctx.moveTo(15, 0);
-        this.ctx.lineTo(-10, -10);
-        this.ctx.lineTo(-10, 10);
+        this.ctx.moveTo(x + tl, y);
+        this.ctx.lineTo(x + w - tr, y);
+        this.ctx.quadraticCurveTo(x + w, y, x + w, y + tr);
+        this.ctx.lineTo(x + w, y + h - br);
+        this.ctx.quadraticCurveTo(x + w, y + h, x + w - br, y + h);
+        this.ctx.lineTo(x + bl, y + h);
+        this.ctx.quadraticCurveTo(x, y + h, x, y + h - bl);
+        this.ctx.lineTo(x, y + tl);
+        this.ctx.quadraticCurveTo(x, y, x + tl, y);
         this.ctx.closePath();
-        this.ctx.fill();
-        this.ctx.stroke();
-
-        this.ctx.fillStyle = 'white';
-        this.ctx.beginPath();
-        this.ctx.arc(8, 0, 3, 0, 2 * Math.PI);
-        this.ctx.fill();
-
-        this.ctx.restore();
     }
 
     moveForward() {

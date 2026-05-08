@@ -26,10 +26,35 @@
             <header class="ls-header">
                 <div class="ls-header-left">
                     <div class="ls-logo">
-                        <span class="ls-logo-icon">🤖</span>
+                        <!-- Mio mascot — neutral, blink via SVG SMIL -->
+                        <svg class="ls-logo-mio" width="46" height="60" viewBox="0 0 100 130" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                            <ellipse cx="17" cy="38" rx="9" ry="12" fill="#ECEEF4"/>
+                            <ellipse cx="83" cy="38" rx="9" ry="12" fill="#ECEEF4"/>
+                            <ellipse cx="50" cy="44" rx="34" ry="30" fill="#ECEEF4"/>
+                            <rect x="17" y="66" width="66" height="44" rx="20" fill="#ECEEF4"/>
+                            <rect x="17" y="95" width="66" height="15" rx="20" fill="#E0E3EC"/>
+                            <rect x="22" y="107" width="22" height="13" rx="6" fill="#F5A623"/>
+                            <rect x="56" y="107" width="22" height="13" rx="6" fill="#F5A623"/>
+                            <rect x="18" y="30" width="64" height="28" rx="14" fill="#F5A623"/>
+                            <circle cx="36" cy="44" r="9" fill="#1A1A2E"/>
+                            <circle cx="36" cy="44" r="6" fill="#FFD060"/>
+                            <circle cx="36" cy="44" r="3" fill="#FFE590"/>
+                            <ellipse cx="32" cy="40" rx="2.5" ry="1.8" fill="white" opacity="0.6" transform="rotate(-20 32 40)"/>
+                            <circle cx="64" cy="44" r="9" fill="#1A1A2E"/>
+                            <circle cx="64" cy="44" r="6" fill="#FFD060"/>
+                            <circle cx="64" cy="44" r="3" fill="#FFE590"/>
+                            <ellipse cx="60" cy="40" rx="2.5" ry="1.8" fill="white" opacity="0.6" transform="rotate(-20 60 40)"/>
+                            <rect x="18" y="30" width="30" fill="#F5A623"><animate attributeName="height" values="12;12;38;12;12" keyTimes="0;0.8;0.88;0.96;1" dur="3.8s" repeatCount="indefinite"/></rect>
+                            <ellipse cx="36" rx="15" ry="5" fill="#F5A623"><animate attributeName="cy" values="42;42;68;42;42" keyTimes="0;0.8;0.88;0.96;1" dur="3.8s" repeatCount="indefinite"/></ellipse>
+                            <rect x="52" y="30" width="30" fill="#F5A623"><animate attributeName="height" values="12;12;38;12;12" keyTimes="0;0.8;0.88;0.96;1" dur="3.8s" begin="0.07s" repeatCount="indefinite"/></rect>
+                            <ellipse cx="64" rx="15" ry="5" fill="#F5A623"><animate attributeName="cy" values="42;42;68;42;42" keyTimes="0;0.8;0.88;0.96;1" dur="3.8s" begin="0.07s" repeatCount="indefinite"/></ellipse>
+                            <line x1="50" y1="14" x2="50" y2="30" stroke="#C8CBD8" stroke-width="4" stroke-linecap="round"/>
+                            <circle cx="50" cy="8" r="8" fill="#3DAA6E"/>
+                            <circle cx="46" cy="4" r="3" fill="#5DC98A"/>
+                        </svg>
                         <span class="ls-logo-text">Mio<span class="ls-logo-code">Code</span></span>
                     </div>
-                    <p class="ls-tagline">Learn to code with your robot 🤖</p>
+                    <p class="ls-tagline">Learn to code with your robot</p>
                 </div>
                 <button id="signOutBtn" class="sign-out-btn">Sign Out</button>
             </header>
@@ -272,7 +297,39 @@
     <!-- win modal -->
     <div id="winModal" class="modal hidden">
         <div class="modal-content">
-            <div class="modal-emoji" aria-hidden="true">🎉</div>
+            <div class="modal-emoji" aria-hidden="true">
+                    <!-- Mio celebrating — star eyes, no lids, arms raised, sparkles -->
+                    <svg width="80" height="104" viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg">
+                        <ellipse cx="17" cy="38" rx="9" ry="12" fill="#ECEEF4"/>
+                        <ellipse cx="83" cy="38" rx="9" ry="12" fill="#ECEEF4"/>
+                        <ellipse cx="50" cy="44" rx="34" ry="30" fill="#ECEEF4"/>
+                        <!-- arms raised -->
+                        <ellipse cx="14" cy="62" rx="14" ry="9" fill="#ECEEF4" transform="rotate(-55 14 62)"/>
+                        <ellipse cx="4"  cy="44" rx="9"  ry="7" fill="#F5A623" transform="rotate(-50 4 44)"/>
+                        <ellipse cx="86" cy="62" rx="14" ry="9" fill="#ECEEF4" transform="rotate(55 86 62)"/>
+                        <ellipse cx="96" cy="44" rx="9"  ry="7" fill="#F5A623" transform="rotate(50 96 44)"/>
+                        <rect x="17" y="66" width="66" height="44" rx="20" fill="#ECEEF4"/>
+                        <rect x="17" y="95" width="66" height="15" rx="20" fill="#E0E3EC"/>
+                        <rect x="22" y="107" width="22" height="13" rx="6" fill="#F5A623"/>
+                        <rect x="56" y="107" width="22" height="13" rx="6" fill="#F5A623"/>
+                        <rect x="18" y="30" width="64" height="28" rx="14" fill="#F5A623"/>
+                        <!-- LED holes — star eyes, zero lids = wide open joy -->
+                        <circle cx="36" cy="44" r="9" fill="#1A1A2E"/>
+                        <polygon points="36,35 38.5,41 45,41 40,45 42,52 36,48 30,52 32,45 27,41 33.5,41" fill="#FFD060"/>
+                        <circle cx="64" cy="44" r="9" fill="#1A1A2E"/>
+                        <polygon points="64,35 66.5,41 73,41 68,45 70,52 64,48 58,52 60,45 55,41 61.5,41" fill="#FFD060"/>
+                        <!-- sparkles -->
+                        <circle cx="12" cy="20" r="4" fill="#F5A623" opacity="0.9"/>
+                        <circle cx="22" cy="8"  r="3" fill="#3DAA6E" opacity="0.9"/>
+                        <circle cx="88" cy="20" r="4" fill="#F5A623" opacity="0.9"/>
+                        <circle cx="78" cy="8"  r="3" fill="#3DAA6E" opacity="0.9"/>
+                        <circle cx="50" cy="4"  r="2" fill="#F5A623" opacity="0.8"/>
+                        <!-- antenna -->
+                        <line x1="50" y1="14" x2="50" y2="30" stroke="#C8CBD8" stroke-width="4" stroke-linecap="round"/>
+                        <circle cx="50" cy="8" r="8" fill="#3DAA6E"/>
+                        <circle cx="46" cy="4" r="3" fill="#5DC98A"/>
+                    </svg>
+                </div>
             <h2>Level Complete!</h2>
             <p>Great job! You programmed the robot to reach the target.</p>
             <div id="winStars" class="win-stars"></div>

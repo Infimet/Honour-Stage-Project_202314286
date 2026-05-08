@@ -105,14 +105,13 @@ body {
     gap: 10px;
 }
 
-.ls-logo-icon {
-    font-size: 2rem;
-    line-height: 1;
+.ls-logo-mio {
     display: inline-block;
-    animation: robot-bob 2.8s ease-in-out infinite;
+    flex-shrink: 0;
+    animation: mio-bob 2.8s ease-in-out infinite;
 }
 
-@keyframes robot-bob {
+@keyframes mio-bob {
     0%, 100% { transform: translateY(0); }
     50%       { transform: translateY(-5px); }
 }
