@@ -80,7 +80,8 @@
             color: #fff;
             letter-spacing: -0.5px;
         }
-        .topbar-logo span { color: var(--green); }
+        .topbar-logo span { color: var(--colour-text); font-weight: 900; }
+        .topbar-logo span span { color: var(--green); }
         .topbar-spacer { flex: 1; }
         .topbar-teacher {
             font-size: 14px;
@@ -509,7 +510,7 @@
                 <line x1="50" y1="14" x2="50" y2="30" stroke="#C8CBD8" stroke-width="4" stroke-linecap="round"/>
                 <circle cx="50" cy="8" r="8" fill="#3DAA6E"/>
                 <circle cx="46" cy="4" r="3" fill="#5DC98A"/>
-            </svg>Mio<span>Code</span>
+            </svg><span class="topbar-wordmark">Mio<span>Code</span></span>
         </div>
         <div class="topbar-spacer"></div>
         <div class="topbar-teacher">Signed in as <strong id="teacherName">Teacher</strong></div>
