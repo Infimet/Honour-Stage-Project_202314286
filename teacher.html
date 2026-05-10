@@ -3,93 +3,964 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MioCode — Sign In</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>MioCode — Teacher Dashboard</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --green:      #3DAA6E;
+            --green-dk:   #2e8a57;
+            --green-lt:   #e8f5ee;
+            --blue:       #4A90D9;
+            --blue-lt:    #e8f2fc;
+            --amber:      #F5A623;
+            --amber-lt:   #fef3e2;
+            --purple:     #7C3AED;
+            --purple-lt:  #ede9fe;
+            --red:        #E53935;
+            --red-lt:     #fdecea;
+            --bg:         #F5F7FA;
+            --surface:    #FFFFFF;
+            --text:       #1A1A2E;
+            --muted:      #6B7280;
+            --border:     #E5E7EB;
+            --font:       'Nunito', Arial, sans-serif;
+            --radius-sm:  6px;
+            --radius-md:  10px;
+            --radius-lg:  14px;
+            --shadow-sm:  0 1px 3px rgba(0,0,0,0.08);
+            --shadow-md:  0 4px 12px rgba(0,0,0,0.10);
+        }
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .hidden { display: none !important; }
+
+        /* --- auth guard overlay --- */
+        #authGuard {
+            position: fixed; inset: 0;
+            background: var(--bg);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 999;
+        }
+        #authGuard p { font-size: 18px; font-weight: 700; color: var(--muted); }
+
+        /* --- layout --- */
+        .dashboard {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 64px 1fr;
+            min-height: 100vh;
+        }
+
+        /* --- topbar --- */
+        .topbar {
+            grid-column: 1 / -1;
+            background: var(--text);
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            gap: 16px;
+        }
+        .topbar-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 20px;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: -0.5px;
+        }
+        .topbar-logo span { color: var(--green); }
+        .topbar-spacer { flex: 1; }
+        .topbar-teacher {
+            font-size: 14px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.7);
+        }
+        .topbar-teacher strong { color: #fff; }
+        .btn-signout {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            font-family: var(--font);
+            font-size: 13px;
+            font-weight: 700;
+            padding: 6px 14px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-signout:hover { background: rgba(255,255,255,0.2); }
+
+        /* --- sidebar --- */
+        .sidebar {
+            background: var(--surface);
+            border-right: 1.5px solid var(--border);
+            padding: 24px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .sidebar-section {
+            padding: 4px 16px 8px;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+        }
+        .nav-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            font-family: var(--font);
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--muted);
+            background: none;
+            border: none;
+            cursor: pointer;
+            border-radius: 0;
+            text-align: left;
+            transition: color 0.15s, background 0.15s;
+            border-left: 3px solid transparent;
+        }
+        .nav-btn:hover { background: var(--bg); color: var(--text); }
+        .nav-btn.active {
+            color: var(--green);
+            background: var(--green-lt);
+            border-left-color: var(--green);
+        }
+        .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+        /* --- main content --- */
+        .main {
+            padding: 32px;
+            overflow-y: auto;
+        }
+
+        .page { display: none; }
+        .page.active { display: block; }
+
+        /* --- page header --- */
+        .page-header {
+            margin-bottom: 28px;
+        }
+        .page-title {
+            font-size: 26px;
+            font-weight: 900;
+            color: var(--text);
+            letter-spacing: -0.5px;
+        }
+        .page-subtitle {
+            font-size: 14px;
+            color: var(--muted);
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* --- stat cards --- */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .stat-label {
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+        }
+        .stat-value {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+        .stat-value.green  { color: var(--green); }
+        .stat-value.blue   { color: var(--blue); }
+        .stat-value.amber  { color: var(--amber); }
+        .stat-value.purple { color: var(--purple); }
+        .stat-sub {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        /* --- class code panel --- */
+        .class-code-panel {
+            background: var(--text);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 28px;
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        .class-code-label {
+            font-size: 13px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 6px;
+        }
+        .class-code-value {
+            font-size: 40px;
+            font-weight: 900;
+            color: var(--green);
+            letter-spacing: 0.15em;
+            font-variant-numeric: tabular-nums;
+        }
+        .class-code-desc {
+            flex: 1;
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.6;
+        }
+        .btn-copy {
+            background: var(--green);
+            border: none;
+            color: #fff;
+            font-family: var(--font);
+            font-size: 14px;
+            font-weight: 800;
+            padding: 10px 20px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-copy:hover { background: var(--green-dk); }
+
+        /* --- create class form --- */
+        .create-class-panel {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 28px;
+            max-width: 480px;
+        }
+        .create-class-panel h3 {
+            font-size: 18px;
+            font-weight: 900;
+            margin-bottom: 16px;
+        }
+        .form-field { margin-bottom: 16px; }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 6px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            font-family: var(--font);
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+            background: var(--bg);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus { border-color: var(--green); }
+        .btn-primary {
+            background: var(--green);
+            border: none;
+            color: #fff;
+            font-family: var(--font);
+            font-size: 15px;
+            font-weight: 800;
+            padding: 12px 24px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-primary:hover { background: var(--green-dk); }
+
+        /* --- data table --- */
+        .table-wrap {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .data-table th {
+            background: var(--bg);
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            border-bottom: 1.5px solid var(--border);
+        }
+        .data-table td {
+            padding: 14px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+        .data-table tr:last-child td { border-bottom: none; }
+        .data-table tr:hover td { background: var(--bg); }
+
+        /* --- stars display --- */
+        .stars {
+            color: var(--amber);
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+
+        /* --- badge pill --- */
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: 99px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+        .pill-green  { background: var(--green-lt);  color: var(--green-dk); }
+        .pill-blue   { background: var(--blue-lt);   color: var(--blue); }
+        .pill-amber  { background: var(--amber-lt);  color: #b36e00; }
+        .pill-purple { background: var(--purple-lt); color: var(--purple); }
+        .pill-red    { background: var(--red-lt);    color: var(--red); }
+
+        /* --- aide log --- */
+        .aide-feed { display: flex; flex-direction: column; gap: 12px; }
+        .aide-card {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px 20px;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 12px 20px;
+            align-items: start;
+        }
+        .aide-card-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--green-lt);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        .aide-card-body {}
+        .aide-card-meta {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+        .aide-card-meta strong { color: var(--text); }
+        .aide-card-hint {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.6;
+        }
+        .aide-card-time {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        /* --- leaderboard --- */
+        .leaderboard { display: flex; flex-direction: column; gap: 8px; }
+        .lb-row {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: box-shadow 0.2s;
+        }
+        .lb-row:hover { box-shadow: var(--shadow-md); }
+        .lb-rank {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 900;
+            color: var(--muted);
+            flex-shrink: 0;
+        }
+        .lb-rank.gold   { background: #FEF3C7; color: #B45309; }
+        .lb-rank.silver { background: #F1F5F9; color: #64748B; }
+        .lb-rank.bronze { background: #FEF9EE; color: #92400E; }
+        .lb-name { flex: 1; font-size: 15px; font-weight: 800; }
+        .lb-stars { font-size: 14px; font-weight: 700; color: var(--amber); }
+        .lb-bar-wrap { width: 120px; }
+        .lb-bar {
+            height: 6px;
+            background: var(--border);
+            border-radius: 99px;
+            overflow: hidden;
+        }
+        .lb-bar-fill {
+            height: 100%;
+            background: var(--green);
+            border-radius: 99px;
+            transition: width 0.6s ease;
+        }
+
+        /* --- empty state --- */
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--muted);
+        }
+        .empty-icon { font-size: 40px; margin-bottom: 12px; }
+        .empty h3 { font-size: 18px; font-weight: 800; margin-bottom: 6px; color: var(--text); }
+        .empty p { font-size: 14px; font-weight: 600; }
+
+        /* --- loading skeleton --- */
+        .skeleton {
+            background: linear-gradient(90deg, var(--border) 25%, #f0f0f0 50%, var(--border) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: var(--radius-sm);
+        }
+        @keyframes shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+    </style>
 </head>
 <body>
 
-    <div class="auth-wrapper">
-        <div class="auth-card">
+<!-- auth guard - hidden once we confirm teacher role -->
+<div id="authGuard">
+    <p>Checking credentials…</p>
+</div>
 
-            <!-- logo matches level select header -->
-            <div class="auth-logo">
-            <!-- Mio mascot — neutral, blink via SVG SMIL -->
-                <svg class="auth-logo-mio" width="52" height="68" viewBox="0 0 100 130" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-                    <ellipse cx="17" cy="38" rx="9" ry="12" fill="#ECEEF4"/>
-                    <ellipse cx="83" cy="38" rx="9" ry="12" fill="#ECEEF4"/>
-                    <ellipse cx="50" cy="44" rx="34" ry="30" fill="#ECEEF4"/>
-                    <rect x="17" y="66" width="66" height="44" rx="20" fill="#ECEEF4"/>
-                    <rect x="17" y="95" width="66" height="15" rx="20" fill="#E0E3EC"/>
-                    <rect x="22" y="107" width="22" height="13" rx="6" fill="#F5A623"/>
-                    <rect x="56" y="107" width="22" height="13" rx="6" fill="#F5A623"/>
-                    <rect x="18" y="30" width="64" height="28" rx="14" fill="#F5A623"/>
-                    <circle cx="36" cy="44" r="9" fill="#1A1A2E"/>
-                    <circle cx="36" cy="44" r="6" fill="#FFD060"/>
-                    <circle cx="36" cy="44" r="3" fill="#FFE590"/>
-                    <ellipse cx="32" cy="40" rx="2.5" ry="1.8" fill="white" opacity="0.6" transform="rotate(-20 32 40)"/>
-                    <circle cx="64" cy="44" r="9" fill="#1A1A2E"/>
-                    <circle cx="64" cy="44" r="6" fill="#FFD060"/>
-                    <circle cx="64" cy="44" r="3" fill="#FFE590"/>
-                    <ellipse cx="60" cy="40" rx="2.5" ry="1.8" fill="white" opacity="0.6" transform="rotate(-20 60 40)"/>
-                    <rect x="18" y="30" width="30" fill="#F5A623"><animate attributeName="height" values="12;12;26;12;12" keyTimes="0;0.8;0.88;0.96;1" dur="3.8s" repeatCount="indefinite"/></rect>
-                    <ellipse cx="36" rx="15" ry="5" fill="#F5A623"><animate attributeName="cy" values="42;42;56;42;42" keyTimes="0;0.8;0.88;0.96;1" dur="3.8s" repeatCount="indefinite"/></ellipse>
-                    <rect x="52" y="30" width="30" fill="#F5A623"><animate attributeName="height" values="12;12;26;12;12" keyTimes="0;0.8;0.88;0.96;1" dur="3.8s" begin="0.07s" repeatCount="indefinite"/></rect>
-                    <ellipse cx="64" rx="15" ry="5" fill="#F5A623"><animate attributeName="cy" values="42;42;56;42;42" keyTimes="0;0.8;0.88;0.96;1" dur="3.8s" begin="0.07s" repeatCount="indefinite"/></ellipse>
-                    <line x1="50" y1="14" x2="50" y2="30" stroke="#C8CBD8" stroke-width="4" stroke-linecap="round"/>
-                    <circle cx="50" cy="8" r="8" fill="#3DAA6E"/>
-                    <circle cx="46" cy="4" r="3" fill="#5DC98A"/>
-                </svg>
-                <span class="auth-title">MioCode</span>
-            </div>
-            <p class="auth-subtitle">Sign in to start learning</p>
+<div class="dashboard hidden" id="dashboard">
 
-            <!-- tabs -->
-            <div class="auth-tabs">
-                <button class="auth-tab auth-tab--active" data-tab="signin">Sign In</button>
-                <button class="auth-tab" data-tab="signup">Sign Up</button>
-            </div>
-
-            <!-- sign in form -->
-            <div id="signinForm">
-                <div class="auth-field">
-                    <label for="signinEmail">Email</label>
-                    <input type="email" id="signinEmail" placeholder="your@email.com" autocomplete="email">
-                </div>
-                <div class="auth-field">
-                    <label for="signinPassword">Password</label>
-                    <input type="password" id="signinPassword" placeholder="••••••••" autocomplete="current-password">
-                </div>
-                <p class="auth-error hidden" id="signinError"></p>
-                <button class="run-button auth-submit" id="signinBtn">Sign In</button>
-            </div>
-
-            <!-- sign up form (students only - teachers created via supabase dashboard) -->
-            <div id="signupForm" class="hidden">
-                <div class="auth-field">
-                    <label for="signupName">Display Name</label>
-                    <input type="text" id="signupName" placeholder="Your name" autocomplete="name">
-                </div>
-                <div class="auth-field">
-                    <label for="signupEmail">Email</label>
-                    <input type="email" id="signupEmail" placeholder="your@email.com" autocomplete="email">
-                </div>
-                <div class="auth-field">
-                    <label for="signupPassword">Password</label>
-                    <input type="password" id="signupPassword" placeholder="••••••••" autocomplete="new-password">
-                </div>
-                <p class="auth-error hidden" id="signupError"></p>
-                <button class="run-button auth-submit" id="signupBtn">Create Account</button>
-            </div>
-
+    <!-- topbar -->
+    <header class="topbar">
+        <div class="topbar-logo">
+            <svg width="32" height="42" viewBox="0 0 100 130" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="17" cy="38" rx="9" ry="12" fill="#ECEEF4"/>
+                <ellipse cx="83" cy="38" rx="9" ry="12" fill="#ECEEF4"/>
+                <ellipse cx="50" cy="44" rx="34" ry="30" fill="#ECEEF4"/>
+                <rect x="17" y="66" width="66" height="44" rx="20" fill="#ECEEF4"/>
+                <rect x="17" y="95" width="66" height="15" rx="20" fill="#E0E3EC"/>
+                <rect x="22" y="107" width="22" height="13" rx="6" fill="#F5A623"/>
+                <rect x="56" y="107" width="22" height="13" rx="6" fill="#F5A623"/>
+                <rect x="18" y="30" width="64" height="28" rx="14" fill="#F5A623"/>
+                <circle cx="36" cy="44" r="9" fill="#1A1A2E"/>
+                <circle cx="36" cy="44" r="6" fill="#FFD060"/>
+                <circle cx="36" cy="44" r="3" fill="#FFE590"/>
+                <ellipse cx="32" cy="40" rx="2.5" ry="1.8" fill="white" opacity="0.6" transform="rotate(-20 32 40)"/>
+                <circle cx="64" cy="44" r="9" fill="#1A1A2E"/>
+                <circle cx="64" cy="44" r="6" fill="#FFD060"/>
+                <circle cx="64" cy="44" r="3" fill="#FFE590"/>
+                <ellipse cx="60" cy="40" rx="2.5" ry="1.8" fill="white" opacity="0.6" transform="rotate(-20 60 40)"/>
+                <rect x="18" y="30" width="30" fill="#F5A623"><animate attributeName="height" values="12;12;26;12;12" keyTimes="0;0.8;0.88;0.96;1" dur="3.8s" repeatCount="indefinite"/></rect>
+                <ellipse cx="36" rx="15" ry="5" fill="#F5A623"><animate attributeName="cy" values="42;42;56;42;42" keyTimes="0;0.8;0.88;0.96;1" dur="3.8s" repeatCount="indefinite"/></ellipse>
+                <rect x="52" y="30" width="30" fill="#F5A623"><animate attributeName="height" values="12;12;26;12;12" keyTimes="0;0.8;0.88;0.96;1" dur="3.8s" begin="0.07s" repeatCount="indefinite"/></rect>
+                <ellipse cx="64" rx="15" ry="5" fill="#F5A623"><animate attributeName="cy" values="42;42;56;42;42" keyTimes="0;0.8;0.88;0.96;1" dur="3.8s" begin="0.07s" repeatCount="indefinite"/></ellipse>
+                <line x1="50" y1="14" x2="50" y2="30" stroke="#C8CBD8" stroke-width="4" stroke-linecap="round"/>
+                <circle cx="50" cy="8" r="8" fill="#3DAA6E"/>
+                <circle cx="46" cy="4" r="3" fill="#5DC98A"/>
+            </svg>
+            Mio<span>Code</span>
         </div>
-    </div>
+        <div class="topbar-spacer"></div>
+        <div class="topbar-teacher">Signed in as <strong id="teacherName">Teacher</strong></div>
+        <button class="btn-signout" onclick="signOut()">Sign Out</button>
+    </header>
 
-    <script src="supabase.js"></script>
-    <script src="auth.js"></script>
+    <!-- sidebar -->
+    <nav class="sidebar">
+        <div class="sidebar-section">Dashboard</div>
+        <button class="nav-btn active" onclick="showPage('overview', this)">
+            <span class="nav-icon">📊</span> Overview
+        </button>
+        <button class="nav-btn" onclick="showPage('students', this)">
+            <span class="nav-icon">👨‍🎓</span> Students
+        </button>
+        <button class="nav-btn" onclick="showPage('aide', this)">
+            <span class="nav-icon">💡</span> AIDE Log
+        </button>
+        <button class="nav-btn" onclick="showPage('leaderboard', this)">
+            <span class="nav-icon">🏆</span> Leaderboard
+        </button>
+    </nav>
 
+    <!-- main content -->
+    <main class="main">
+
+        <!-- OVERVIEW PAGE -->
+        <div class="page active" id="page-overview">
+            <div class="page-header">
+                <h1 class="page-title">Overview</h1>
+                <p class="page-subtitle" id="overviewSubtitle">Loading your class data…</p>
+            </div>
+
+            <!-- class code or create class -->
+            <div id="classCodeSection"></div>
+
+            <!-- stat cards -->
+            <div class="stat-grid" id="statGrid">
+                <div class="stat-card"><div class="stat-label">Students</div><div class="skeleton" style="height:40px;width:60px;"></div></div>
+                <div class="stat-card"><div class="stat-label">Avg Stars</div><div class="skeleton" style="height:40px;width:60px;"></div></div>
+                <div class="stat-card"><div class="stat-label">Levels Done</div><div class="skeleton" style="height:40px;width:60px;"></div></div>
+                <div class="stat-card"><div class="stat-label">AIDE Hints</div><div class="skeleton" style="height:40px;width:60px;"></div></div>
+            </div>
+
+            <!-- hardest levels -->
+            <h2 style="font-size:17px;font-weight:900;margin-bottom:14px;">Most Challenging Levels</h2>
+            <div class="table-wrap" id="hardLevelsTable">
+                <div class="empty"><div class="empty-icon">📈</div><p>No data yet</p></div>
+            </div>
+        </div>
+
+        <!-- STUDENTS PAGE -->
+        <div class="page" id="page-students">
+            <div class="page-header">
+                <h1 class="page-title">Students</h1>
+                <p class="page-subtitle">Progress for each student in your class</p>
+            </div>
+            <div class="table-wrap">
+                <table class="data-table" id="studentsTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Total Stars</th>
+                            <th>Levels Done</th>
+                            <th>Streak</th>
+                            <th>Hints Used</th>
+                            <th>Last Active</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentsTableBody">
+                        <tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);font-weight:700;">Loading students…</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- AIDE LOG PAGE -->
+        <div class="page" id="page-aide">
+            <div class="page-header">
+                <h1 class="page-title">AIDE Hint Log</h1>
+                <p class="page-subtitle">Every hint generated for students in your class</p>
+            </div>
+            <div class="aide-feed" id="aideFeed">
+                <div class="empty"><div class="empty-icon">💡</div><h3>No hints yet</h3><p>Hints appear here when students use the AIDE Teacher Console</p></div>
+            </div>
+        </div>
+
+        <!-- LEADERBOARD PAGE -->
+        <div class="page" id="page-leaderboard">
+            <div class="page-header">
+                <h1 class="page-title">Class Leaderboard</h1>
+                <p class="page-subtitle">Ranked by total stars earned across all levels</p>
+            </div>
+            <div class="leaderboard" id="leaderboardList">
+                <div class="empty"><div class="empty-icon">🏆</div><h3>No students yet</h3><p>Students will appear here once they join your class</p></div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script>
+const SUPABASE_URL      = 'https://idhvfxbkfljtwjfvpulu.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlkaHZmeGJrZmxqdHdqZnZwdWx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwNjU0NjAsImV4cCI6MjA5MTY0MTQ2MH0._SEWNgZPwGKfBwHiGbT2kG8Uq4Jcbq-1uTS8DJC1IAI';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser   = null;
+let teacherClass  = null;
+let allStudents   = [];
+let allLevels     = [];
+
+// --- auth guard ---
+async function init() {
+    const { data: { user } } = await db.auth.getUser();
+    if (!user) { window.location.href = 'login.html'; return; }
+
+    const { data: profile } = await db.from('profiles')
+        .select('role, display_name')
+        .eq('id', user.id)
+        .maybeSingle();
+
+    if (!profile || profile.role !== 'teacher') {
+        window.location.replace('index.html');
+        return;
+    }
+
+    currentUser = user;
+    document.getElementById('teacherName').textContent = profile.display_name || user.email;
+    document.getElementById('authGuard').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
+
+    await loadDashboard();
+}
+
+async function loadDashboard() {
+    // fetch teacher's class and all levels in parallel
+    const [{ data: cls }, { data: levels }] = await Promise.all([
+        db.from('classes').select('*').eq('teacher_id', currentUser.id).maybeSingle(),
+        db.from('levels').select('id, title, category')
+    ]);
+
+    teacherClass = cls;
+    allLevels    = levels || [];
+
+    renderClassCodeSection();
+
+    if (!cls) {
+        document.getElementById('overviewSubtitle').textContent = 'Create a class to get started.';
+        renderEmptyStats();
+        return;
+    }
+
+    document.getElementById('overviewSubtitle').textContent = `Class: ${cls.name}`;
+
+    // fetch students, their progress, and aide interactions
+    const { data: students } = await db.from('profiles')
+        .select('id, display_name, total_stars, streak_current, last_active_date')
+        .eq('class_id', cls.id)
+        .eq('role', 'student');
+
+    allStudents = students || [];
+
+    if (allStudents.length === 0) {
+        renderEmptyStats();
+        renderEmptyStudents();
+        return;
+    }
+
+    const studentIds = allStudents.map(s => s.id);
+
+    const [{ data: progress }, { data: aideLog }] = await Promise.all([
+        db.from('student_progress')
+            .select('student_id, level_id, completed, stars_earned, hints_used')
+            .in('student_id', studentIds),
+        db.from('aide_interactions')
+            .select('student_id, level_id, hint_text, blocks_used, optimal, created_at')
+            .in('student_id', studentIds)
+            .order('created_at', { ascending: false })
+            .limit(100)
+    ]);
+
+    renderStats(students, progress || [], aideLog || []);
+    renderHardLevels(progress || []);
+    renderStudentsTable(students, progress || [], aideLog || []);
+    renderAideLog(aideLog || [], students);
+    renderLeaderboard(students);
+}
+
+// --- class code section ---
+function renderClassCodeSection() {
+    const el = document.getElementById('classCodeSection');
+
+    if (!teacherClass) {
+        el.innerHTML = `
+            <div class="create-class-panel" style="margin-bottom:28px;">
+                <h3>Create Your Class</h3>
+                <p style="font-size:14px;color:var(--muted);font-weight:600;margin-bottom:20px;">
+                    Create a class to get a shareable code students can use to join.
+                </p>
+                <div class="form-field">
+                    <label class="form-label">Class Name</label>
+                    <input class="form-input" id="classNameInput" placeholder="e.g. Year 5 Computing" />
+                </div>
+                <button class="btn-primary" onclick="createClass()">Create Class</button>
+            </div>`;
+        return;
+    }
+
+    el.innerHTML = `
+        <div class="class-code-panel" style="margin-bottom:28px;">
+            <div>
+                <div class="class-code-label">Class Code</div>
+                <div class="class-code-value">${teacherClass.class_code}</div>
+            </div>
+            <div class="class-code-desc">
+                Share this code with your students. They can enter it on the level select screen to join your class and appear on your dashboard.
+            </div>
+            <button class="btn-copy" onclick="copyCode('${teacherClass.class_code}')">📋 Copy Code</button>
+        </div>`;
+}
+
+async function createClass() {
+    const name = document.getElementById('classNameInput').value.trim();
+    if (!name) return;
+
+    // generate a 6-char alphanumeric class code
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+    const { data, error } = await db.from('classes').insert({
+        teacher_id: currentUser.id,
+        name,
+        class_code: code
+    }).select().maybeSingle();
+
+    if (error) { alert('Failed to create class: ' + error.message); return; }
+
+    teacherClass = data;
+    renderClassCodeSection();
+    document.getElementById('overviewSubtitle').textContent = `Class: ${data.name}`;
+}
+
+function copyCode(code) {
+    navigator.clipboard.writeText(code).then(() => {
+        const btn = document.querySelector('.btn-copy');
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => btn.textContent = '📋 Copy Code', 2000);
+    });
+}
+
+// --- stats ---
+function renderStats(students, progress, aideLog) {
+    const totalStars   = students.reduce((s, st) => s + (st.total_stars || 0), 0);
+    const avgStars     = students.length ? (totalStars / students.length).toFixed(1) : 0;
+    const totalDone    = progress.filter(p => p.completed).length;
+    const totalHints   = aideLog.length;
+
+    document.getElementById('statGrid').innerHTML = `
+        <div class="stat-card">
+            <div class="stat-label">Students</div>
+            <div class="stat-value blue">${students.length}</div>
+            <div class="stat-sub">in your class</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Avg Stars</div>
+            <div class="stat-value amber">⭐ ${avgStars}</div>
+            <div class="stat-sub">per student</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Levels Done</div>
+            <div class="stat-value green">${totalDone}</div>
+            <div class="stat-sub">across all students</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">AIDE Hints</div>
+            <div class="stat-value purple">${totalHints}</div>
+            <div class="stat-sub">hints generated</div>
+        </div>`;
+}
+
+function renderEmptyStats() {
+    document.getElementById('statGrid').innerHTML = `
+        <div class="stat-card"><div class="stat-label">Students</div><div class="stat-value blue">0</div><div class="stat-sub">no students yet</div></div>
+        <div class="stat-card"><div class="stat-label">Avg Stars</div><div class="stat-value amber">—</div><div class="stat-sub">no data yet</div></div>
+        <div class="stat-card"><div class="stat-label">Levels Done</div><div class="stat-value green">0</div><div class="stat-sub">no completions yet</div></div>
+        <div class="stat-card"><div class="stat-label">AIDE Hints</div><div class="stat-value purple">0</div><div class="stat-sub">no hints yet</div></div>`;
+}
+
+// --- hardest levels ---
+function renderHardLevels(progress) {
+    const failMap = {};
+    allLevels.forEach(l => failMap[l.id] = { title: l.title, category: l.category, attempts: 0 });
+    progress.forEach(p => {
+        if (failMap[p.level_id]) failMap[p.level_id].attempts++;
+    });
+
+    // rank by attempts descending — more attempts = more challenging
+    const sorted = Object.values(failMap)
+        .filter(l => l.attempts > 0)
+        .sort((a, b) => b.attempts - a.attempts)
+        .slice(0, 5);
+
+    if (!sorted.length) {
+        document.getElementById('hardLevelsTable').innerHTML = '<div class="empty"><div class="empty-icon">📈</div><p>No data yet</p></div>';
+        return;
+    }
+
+    const catColour = { basics: 'green', loops: 'blue', obstacles: 'amber', conditionals: 'purple' };
+    const rows = sorted.map(l => `
+        <tr>
+            <td><strong>${l.title}</strong></td>
+            <td><span class="pill pill-${catColour[l.category] || 'blue'}">${l.category}</span></td>
+            <td>${l.attempts} attempt${l.attempts !== 1 ? 's' : ''}</td>
+        </tr>`).join('');
+
+    document.getElementById('hardLevelsTable').innerHTML = `
+        <table class="data-table">
+            <thead><tr><th>Level</th><th>Category</th><th>Total Attempts</th></tr></thead>
+            <tbody>${rows}</tbody>
+        </table>`;
+}
+
+// --- students table ---
+function renderStudentsTable(students, progress, aideLog) {
+    const progressByStudent = {};
+    progress.forEach(p => {
+        if (!progressByStudent[p.student_id]) progressByStudent[p.student_id] = [];
+        progressByStudent[p.student_id].push(p);
+    });
+
+    const hintsByStudent = {};
+    aideLog.forEach(a => {
+        hintsByStudent[a.student_id] = (hintsByStudent[a.student_id] || 0) + 1;
+    });
+
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+
+    const rows = students.map(s => {
+        const sp       = progressByStudent[s.id] || [];
+        const done     = sp.filter(p => p.completed).length;
+        const hints    = hintsByStudent[s.id] || 0;
+        const lastDate = s.last_active_date;
+        const isActive = lastDate === today;
+        const wasYest  = lastDate === yesterday;
+
+        const statusPill = isActive
+            ? '<span class="pill pill-green">Active today</span>'
+            : wasYest
+                ? '<span class="pill pill-blue">Active yesterday</span>'
+                : lastDate
+                    ? `<span class="pill pill-amber">Last: ${lastDate}</span>`
+                    : '<span class="pill pill-red">Never active</span>';
+
+        const stars = '⭐'.repeat(Math.min(s.total_stars || 0, 5));
+
+        return `<tr>
+            <td><strong>${s.display_name || 'Student'}</strong></td>
+            <td><span class="stars">${stars}</span> ${s.total_stars || 0}</td>
+            <td>${done} / ${allLevels.length}</td>
+            <td>🔥 ${s.streak_current || 0} days</td>
+            <td>${hints} hint${hints !== 1 ? 's' : ''}</td>
+            <td style="color:var(--muted)">${lastDate || '—'}</td>
+            <td>${statusPill}</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('studentsTableBody').innerHTML = rows || '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);font-weight:700;">No students yet</td></tr>';
+}
+
+function renderEmptyStudents() {
+    document.getElementById('studentsTableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:40px;color:var(--muted);font-weight:700;">No students have joined yet. Share your class code!</td></tr>';
+}
+
+// --- aide log ---
+function renderAideLog(aideLog, students) {
+    if (!aideLog.length) return;
+
+    const studentMap = {};
+    students.forEach(s => studentMap[s.id] = s.display_name || 'Student');
+    const levelMap = {};
+    allLevels.forEach(l => levelMap[l.id] = l.title);
+
+    const cards = aideLog.map(a => {
+        const time = new Date(a.created_at).toLocaleString('en-GB', {
+            day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+        });
+        const efficiency = a.blocks_used && a.optimal
+            ? `${a.blocks_used} blocks used (optimal: ${a.optimal})`
+            : '';
+
+        return `
+            <div class="aide-card">
+                <div class="aide-card-icon">💡</div>
+                <div class="aide-card-body">
+                    <div class="aide-card-meta">
+                        <strong>${studentMap[a.student_id] || 'Student'}</strong>
+                        · ${levelMap[a.level_id] || 'Level'}
+                        ${efficiency ? `· <span style="color:var(--muted)">${efficiency}</span>` : ''}
+                    </div>
+                    <div class="aide-card-hint">${a.hint_text}</div>
+                </div>
+                <div class="aide-card-time">${time}</div>
+            </div>`;
+    }).join('');
+
+    document.getElementById('aideFeed').innerHTML = cards;
+}
+
+// --- leaderboard ---
+function renderLeaderboard(students) {
+    if (!students.length) return;
+
+    const sorted = [...students].sort((a, b) => (b.total_stars || 0) - (a.total_stars || 0));
+    const max    = sorted[0]?.total_stars || 1;
+
+    const rankClass = i => i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : '';
+    const rankLabel = i => i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}`;
+
+    const rows = sorted.map((s, i) => `
+        <div class="lb-row">
+            <div class="lb-rank ${rankClass(i)}">${rankLabel(i)}</div>
+            <div class="lb-name">${s.display_name || 'Student'}</div>
+            <div class="lb-stars">⭐ ${s.total_stars || 0} stars</div>
+            <div class="lb-bar-wrap">
+                <div class="lb-bar">
+                    <div class="lb-bar-fill" style="width:${Math.round(((s.total_stars || 0) / max) * 100)}%"></div>
+                </div>
+            </div>
+        </div>`).join('');
+
+    document.getElementById('leaderboardList').innerHTML = rows;
+}
+
+// --- navigation ---
+function showPage(pageId, btn) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + pageId).classList.add('active');
+    btn.classList.add('active');
+}
+
+// --- sign out ---
+async function signOut() {
+    await db.auth.signOut();
+    window.location.href = 'login.html';
+}
+
+init();
+</script>
 </body>
 </html>
